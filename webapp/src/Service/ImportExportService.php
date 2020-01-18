@@ -21,6 +21,8 @@ use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Id\AssignedGenerator;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\NonUniqueResultException;
+use Exception;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -601,6 +603,66 @@ class ImportExportService
         }
 
         return count($groupData);
+    }
+
+    /**
+     * Import organizations JSON
+     * @param array       $data
+     * @param string|null $message
+     * @return int
+     * @throws Exception
+     */
+    protected function importOrganizationsJson(array $data, string &$message = null): int
+    {
+        $organizationData = [];
+        foreach ($data as $idx => $group) {
+            $organizationData[] = [
+                'externalid' => @$group['id'],
+                'shortname' => @$group['name'],
+                'name' => @$group['formal_name'],
+                'country' => @$group['country'],
+            ];
+        }
+
+        return $this->importOrganizationData($organizationData);
+    }
+
+    /**
+     * Import organization data from the given array
+     *
+     * @param array $organizationData
+     *
+     * @return int
+     *
+     * @throws NonUniqueResultException
+     */
+    protected function importOrganizationData(array $organizationData): int
+    {
+        foreach ($organizationData as $organizationItem) {
+            $externalId      = $organizationItem['externalid'];
+            $teamAffiliation = $this->em->getRepository(TeamAffiliation::class)->findOneBy(['externalid' => $externalId]);
+            if (!$teamAffiliation) {
+                $teamAffiliation = new TeamAffiliation();
+                $teamAffiliation->setExternalid($externalId);
+                $this->em->persist($teamAffiliation);
+                $action = EventLogService::ACTION_CREATE;
+            } else {
+                $action = EventLogService::ACTION_UPDATE;
+            }
+            $teamAffiliation
+                ->setShortname($organizationItem['shortname'])
+                ->setName($organizationItem['name'])
+                ->setCountry($organizationItem['country']);
+            $this->em->flush();
+            if ($contest = $this->dj->getCurrentContest()) {
+                $this->eventLogService->log('team_affilation', $teamAffiliation->getAffilid(), $action,
+                                            $contest->getCid());
+            }
+            $this->dj->auditlog('team_affilation', $teamAffiliation->getCategoryid(), 'replaced',
+                                             'imported from tsv / json');
+        }
+
+        return count($organizationData);
     }
 
     /**
