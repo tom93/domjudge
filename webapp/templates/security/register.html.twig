@@ -25,42 +25,27 @@
 {% block extrafooter %}
     <script>
         $(function () {
-            $('#user_registration_existingAffiliation').select2();
+            var $affiliation = $('#user_registration_affiliation');
 
-            var $affiliationRadios = $('[name="user_registration[affiliation]"]');
+            $affiliation.select2();
 
-            if ($affiliationRadios.length) {
-                $affiliationRadios.on('change', function () {
+            var $affiliationNew = $('[data-id="user_registration_affiliation_new"]');
+
+            if ($affiliation.length && $affiliationNew.length) {
+                $affiliation.on('change', function () {
                     var $affiliationNameGroup = $('#user_registration_affiliationName').closest('.form-group');
                     var $affiliationCountryGroup = $('#user_registration_affiliationCountry').closest('.form-group');
-                    var $existingAffiliationGroup = $('#user_registration_existingAffiliation').closest('.form-group');
-                    var value = $affiliationRadios.filter(':checked').val();
 
-                    switch (value) {
-                        case 'none':
-                            $affiliationNameGroup.hide();
-                            $affiliationCountryGroup.hide();
-                            $existingAffiliationGroup.hide();
-                            break;
-                        case 'new':
-                            $affiliationNameGroup.show();
-                            $affiliationCountryGroup.show();
-                            $existingAffiliationGroup.hide();
-                            break;
-                        case 'existing':
-                            $affiliationNameGroup.hide();
-                            $affiliationCountryGroup.hide();
-                            $existingAffiliationGroup.show();
-                            break;
+                    if ($affiliationNew.is(':selected')) {
+                        $affiliationNameGroup.show();
+                        $affiliationCountryGroup.show();
+                    } else {
+                        $affiliationNameGroup.hide();
+                        $affiliationCountryGroup.hide();
                     }
                 });
 
-                var $checkedRadio = $affiliationRadios.filter(':checked');
-                if ($checkedRadio.length === 0) {
-                    $affiliationRadios.first().prop('checked', true);
-                }
-
-                $affiliationRadios.change();
+                $affiliation.change();
             }
         });
     </script>
