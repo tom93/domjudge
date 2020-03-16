@@ -111,19 +111,43 @@ class UserRegistrationType extends AbstractType
                 $countries["$name ($alpha3)"] = $alpha3;
             }
 
-            $affiliationChoices = [];
-            $affiliationChoices['Use existing affiliation'] = 'existing';
+            $specialAffiliationChoices = [];
             if ($this->config->get('show_new_affiliation_option')) {
-                $affiliationChoices['Add new affiliation'] = 'new';
+                $specialAffiliationChoices['Add new affiliation'] = 'new';
             }
-            $affiliationChoices['No affiliation'] = 'none';
+            $specialAffiliationChoices['No affiliation'] = 'none';
+            $affiliations = [];
+            foreach ($this->em->getRepository(TeamAffiliation::class)->findBy([], ['name' => 'ASC']) as $affiliation) {
+                $affiliations[$affiliation->getName()] = $affiliation;
+            }
 
             $builder
                 ->add('affiliation', ChoiceType::class, [
-                    'choices' => $affiliationChoices,
-                    'expanded' => true,
+                    // Note: it is important that $specialAffiliationChoices takes precedence over user-created affiliations with the same names
+                    'choices' => $specialAffiliationChoices + $affiliations,
+                    'preferred_choices' => array_values($specialAffiliationChoices),
                     'mapped' => false,
                     'label' => false,
+                    'placeholder' => '-- Select affiliation --',
+                    'choice_value' => function ($choice) {
+                        if ($choice === null) {
+                            return '';
+                        } elseif (is_string($choice)) {
+                            return $choice;
+                        } else {
+                            return (string)$choice->getAffilid();
+                        }
+                    },
+                    'choice_attr' => function ($choice, $key, $value) {
+                        if ($choice === 'new') {
+                            // use 'data-id' instead of 'id' because of Symfony issue #20965
+                            return ['data-id' => 'user_registration_affiliation_new'];
+                        }
+                        return [];
+                    },
+                    'constraints' => [
+                        new NotBlank(),
+                    ],
                 ]);
             if ($this->config->get('show_new_affiliation_option')) {
                 $builder->add('affiliationName', TextType::class, [
@@ -153,20 +177,6 @@ class UserRegistrationType extends AbstractType
                     ]);
                 }
             }
-            $builder->add('existingAffiliation', EntityType::class, [
-                    'class' => TeamAffiliation::class,
-                    'label' => false,
-                    'required' => false,
-                    'mapped' => false,
-                    'choice_label' => 'name',
-                    'placeholder' => '-- Select affiliation --',
-                    'query_builder' => fn(EntityRepository $er) => $er
-                        ->createQueryBuilder('a')
-                        ->orderBy('a.name'),
-                    'attr' => [
-                        'placeholder' => 'Affiliation',
-                    ],
-                ]);
         }
 
         $builder
@@ -220,29 +230,20 @@ class UserRegistrationType extends AbstractType
             if ($this->config->get('show_affiliations')) {
                 /** @var Form $form */
                 $form = $context->getRoot();
-                switch ($form->get('affiliation')->getData()) {
-                    case 'new':
-                        foreach (['Name','ShortName'] as $identifier) {
-                            $name = $form->get('affiliation'.$identifier)->getData();
-                            if (empty($name)) {
-                                $context->buildViolation('This value should not be blank.')
-                                    ->atPath('affiliation'.$identifier)
-                                    ->addViolation();
-                            }
-                            if ($this->em->getRepository(TeamAffiliation::class)->findOneBy([strtolower($identifier) => $name])) {
-                                $context->buildViolation('This affiliation '.strtolower($identifier).' is already in use.')
-                                    ->atPath('affiliation'.$identifier)
-                                    ->addViolation();
-                            }
-                        }
-                        break;
-                    case 'existing':
-                        if (empty($form->get('existingAffiliation')->getData())) {
+                if ($form->get('affiliation')->getData() === 'new') {
+                    foreach (['Name','ShortName'] as $identifier) {
+                        $name = $form->get('affiliation'.$identifier)->getData();
+                        if (empty($name)) {
                             $context->buildViolation('This value should not be blank.')
-                                ->atPath('existingAffiliation')
+                                ->atPath('affiliation'.$identifier)
                                 ->addViolation();
                         }
-                        break;
+                        if ($this->em->getRepository(TeamAffiliation::class)->findOneBy([strtolower($identifier) => $name])) {
+                            $context->buildViolation('This affiliation '.strtolower($identifier).' is already in use.')
+                                ->atPath('affiliation'.$identifier)
+                                ->addViolation();
+                        }
+                    }
                 }
             }
         };
