@@ -141,23 +141,23 @@ class SecurityController extends AbstractController
                 ->setInternalComments('Registered by ' . $this->dj->getClientIp() . ' on ' . date('r'));
 
             if ($this->config->get('show_affiliations')) {
-                switch ($registration_form->get('affiliation')->getData()) {
-                    case 'new':
-                        $affiliation = new TeamAffiliation();
-                        $affiliation
-                            ->setExternalid(Uuid::uuid4()->toString())
-                            ->setName($registration_form->get('affiliationName')->getData())
-                            ->setShortname($registration_form->get('affiliationShortName')->getData());
-                        if ($registration_form->has('affiliationCountry')) {
-                            $affiliation->setCountry($registration_form->get('affiliationCountry')->getData());
-                        }
-                        $team->setAffiliation($affiliation);
-                        $em->persist($affiliation);
-                        break;
-                    case 'existing':
-                        $team->setAffiliation($registration_form->get('existingAffiliation')->getData());
-                        break;
+                $affiliationData = $registration_form->get('affiliation')->getData();
+                if ($affiliationData === 'none') {
+                    $affiliation = null;
+                } elseif ($affiliationData === 'new') {
+                    $affiliation = new TeamAffiliation();
+                    $affiliation
+                        ->setExternalid(Uuid::uuid4()->toString())
+                        ->setName($registration_form->get('affiliationName')->getData())
+                        ->setShortname($registration_form->get('affiliationShortName')->getData());
+                    if ($registration_form->has('affiliationCountry')) {
+                        $affiliation->setCountry($registration_form->get('affiliationCountry')->getData());
+                    }
+                    $em->persist($affiliation);
+                } else {
+                    $affiliation = $affiliationData;
                 }
+                $team->setAffiliation($affiliation);
             }
 
             $em->persist($user);
