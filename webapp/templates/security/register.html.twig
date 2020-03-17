@@ -27,11 +27,15 @@
         $(function () {
             var $affiliation = $('#user_registration_affiliation');
 
-            $affiliation.select2();
+            if ($affiliation.length === 0) {
+                return;
+            }
 
             var $affiliationNew = $('[data-id="user_registration_affiliation_new"]');
 
-            if ($affiliation.length && $affiliationNew.length) {
+            // only display the new affiliation name and country fields when "Add affiliation..." is selected
+
+            if ($affiliationNew.length) {
                 $affiliation.on('change', function () {
                     var $affiliationNameGroup = $('#user_registration_affiliationName').closest('.form-group');
                     var $affiliationCountryGroup = $('#user_registration_affiliationCountry').closest('.form-group');
@@ -47,6 +51,71 @@
 
                 $affiliation.change();
             }
+
+            // during search, move the options "No affiliation" and "Add affiliation..." to the end
+
+            var $options = $affiliation.find('option');
+            var preferredOptions = [];
+            var separator = null;
+            for (var i = 0; i < $options.length; i++) {
+                var option = $options[i];
+                var $option = $(option);
+                if (i === 0 && $option.attr("value") === "") {
+                    $option.addClass("placeholder");
+                } else if (!$option.attr("value") && $option.is(':disabled')) {
+                    separator = option;
+                    break;
+                } else {
+                    preferredOptions.push(option);
+                }
+            }
+            if (separator === null) {
+                preferredOptions = [];
+            } else {
+                $(preferredOptions).addClass("preferred");
+            }
+
+            function matcher(params, data) {
+                if (params.term) {
+                    var $element = $(data.element);
+                    if ($element.hasClass("placeholder")) {
+                        return null;
+                    } else if ($element.hasClass("preferred") || data.element === separator) {
+                        return $.extend({}, data, {fakeMatch: true});
+                    }
+                }
+                return $.fn.select2.defaults.defaults.matcher(params, data);
+            }
+
+            function sorter(data) {
+                var fakeMatches = [];
+                var affiliationNewMatch = [];
+                var separatorMatch = [];
+                var other = [];
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i].fakeMatch) {
+                        if ($affiliationNew.length && data[i].element === $affiliationNew[0]) {
+                            affiliationNewMatch.push(data[i]);
+                        } else if (data[i].element === separator) {
+                            separatorMatch.push(data[i]);
+                        } else {
+                            fakeMatches.push(data[i]);
+                        }
+                    } else {
+                        other.push(data[i]);
+                    }
+                }
+                if (other.length === 0 || fakeMatches.length + affiliationNewMatch.length === 0) {
+                    separatorMatch = [];
+                }
+                return other.concat(separatorMatch, affiliationNewMatch, fakeMatches);
+            }
+
+            $affiliation.select2({
+                matcher: matcher,
+                sorter: sorter,
+            });
+
         });
     </script>
 
