@@ -2,6 +2,7 @@
 
 {% block choice_widget_collapsed -%}
     {%- set attr = attr|merge({class: (attr.class|default('') ~ ' form-control custom-select')|trim}) -%}
+    {%- set separator = '──────────' -%}
     {{- parent() -}}
 {%- endblock choice_widget_collapsed %}
 
