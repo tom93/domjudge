@@ -276,6 +276,10 @@ td.scorenc { border-color: silver; border-right: 0; }
     margin-top: -3px;
 }
 
+.select2-results.select2-results .select2-results__option[aria-disabled="true"] {
+    cursor: unset;
+}
+
 table.rejudgetable td {
     text-align: center;
 }
