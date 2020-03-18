@@ -286,6 +286,7 @@ class TeamController extends BaseController
                 'ajax' => true,
             ],
             'team' => $team,
+            'showTeamMembers' => (bool)$this->config->get('show_team_members'),
             'showAffiliations' => (bool)$this->config->get('show_affiliations'),
             'showFlags' => (bool)$this->config->get('show_flags'),
             'showContest' => count($this->dj->getCurrentContests()) > 1,

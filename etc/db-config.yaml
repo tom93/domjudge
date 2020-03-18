@@ -164,6 +164,11 @@
             default_value: true
             public: true
             description: Show pending submissions on the scoreboard?
+        -   name: show_team_members
+            type: bool
+            default_value: true
+            public: true
+            description: Show team members in the interfaces?
         -   name: show_flags
             type: bool
             default_value: true
