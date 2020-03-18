@@ -158,10 +158,12 @@ class PublicController extends BaseController
     public function teamAction(Request $request, int $teamId)
     {
         $team             = $this->em->getRepository(Team::class)->find($teamId);
+        $showTeamMembers  = (bool)$this->config->get('show_team_members');
         $showFlags        = (bool)$this->config->get('show_flags');
         $showAffiliations = (bool)$this->config->get('show_affiliations');
         $data             = [
             'team' => $team,
+            'showTeamMembers' => $showTeamMembers,
             'showFlags' => $showFlags,
             'showAffiliations' => $showAffiliations,
         ];
