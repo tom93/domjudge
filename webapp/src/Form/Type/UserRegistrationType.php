@@ -18,6 +18,7 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Form;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -118,6 +119,19 @@ class UserRegistrationType extends AbstractType
                     'constraints' => [
                         new NotBlank(),
                     ],
+                ]);
+        }
+
+        if ($this->config->get('show_team_members_in_reg_form')) {
+            $builder
+                ->add('members', TextareaType::class, [
+                    'label' => false,
+                    'mapped' => false,
+                    'attr' => [
+                        'placeholder' => 'Team members',
+                    ],
+                    'required' => true,
+                    'constraints' => [new NotBlank()],
                 ]);
         }
 

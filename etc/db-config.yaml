@@ -191,6 +191,11 @@
             default_value: true
             public: true
             description: Show full name field in the self-registration form?
+        -   name: show_team_members_in_reg_form
+            type: bool
+            default_value: false
+            public: true
+            description: Show team members field in the self-registration form?
         -   name: show_flags
             type: bool
             default_value: true
