@@ -139,7 +139,7 @@ class UserRegistrationType extends AbstractType
                 $specialAffiliationChoices['Add affiliation...'] = 'new';
             }
             $affiliations = [];
-            foreach ($this->em->getRepository(TeamAffiliation::class)->findAll() as $affiliation) {
+            foreach ($this->em->getRepository(TeamAffiliation::class)->findBy([], ['name' => 'ASC']) as $affiliation) {
                 $affiliations[$affiliation->getName()] = $affiliation;
             }
 
