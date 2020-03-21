@@ -279,6 +279,16 @@ class Contest extends BaseApiEntity
     private $openToAllTeams = true;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", name="show_teams_with_no_submissions",
+     *     options={"comment"="Should teams that have not made any submissions be included in the scoreboard?",
+     *              "default"=1},
+     *     nullable=false)
+     * @Serializer\Exclude()
+     */
+    private $showTeamsWithNoSubmissions = true;
+
+    /**
      * @ORM\ManyToMany(targetEntity="Team", inversedBy="contests")
      * @ORM\JoinTable(name="contestteam",
      *                joinColumns={@ORM\JoinColumn(name="cid", referencedColumnName="cid", onDelete="CASCADE")},
@@ -945,6 +955,30 @@ class Contest extends BaseApiEntity
     public function isOpenToAllTeams()
     {
         return $this->openToAllTeams;
+    }
+
+    /**
+     * Set show teams with no submissions
+     *
+     * @param boolean $showTeamsWithNoSubmissions
+     *
+     * @return Contest
+     */
+    public function setShowTeamsWithNoSubmissions($showTeamsWithNoSubmissions)
+    {
+        $this->showTeamsWithNoSubmissions = $showTeamsWithNoSubmissions;
+
+        return $this;
+    }
+
+    /**
+     * Get show teams with no submissions
+     *
+     * @return boolean
+     */
+    public function isShowTeamsWithNoSubmissions()
+    {
+        return $this->showTeamsWithNoSubmissions;
     }
 
     /**

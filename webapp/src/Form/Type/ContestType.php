@@ -94,6 +94,14 @@ class ContestType extends AbstractExternalIdEntityType
                 return $category->getName();
             },
         ]);
+        $builder->add('showTeamsWithNoSubmissions', ChoiceType::class, [
+            'expanded' => true,
+            'label' => 'Show teams with no submissions',
+            'choices' => [
+                'Yes' => true,
+                'No' => false,
+            ],
+        ]);
         $builder->add('enabled', ChoiceType::class, [
             'expanded' => true,
             'choices' => [

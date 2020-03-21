@@ -153,6 +153,13 @@ class AnalysisController extends AbstractController
           $num_submissions[$r['teamid']] = $r['num_submissions'];
         }
 
+        // Filter out teams with no submissions if desired
+        if (!$contest->isShowTeamsWithNoSubmissions()) {
+            $teams = array_filter($teams, function ($team) use ($num_submissions) {
+                return $num_submissions[$team->getTeamId()] ?? 0 > 0;
+            });
+        }
+
 
         // Come up with misc stats
         // find last correct judgement for a team, figure out how many minutes are left in the contest(or til now if now is earlier)
