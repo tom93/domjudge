@@ -576,6 +576,8 @@ class ContestController extends BaseController
         $contest = new Contest();
         // Set default activate time
         $contest->setActivatetimeString(strftime('%Y-%m-%d %H:%M:00 ') . date_default_timezone_get());
+        // Set default value for showing teams with no submissions based on the corresponding configuration option
+        $contest->setShowTeamsWithNoSubmissions((bool)$this->config->get('show_teams_with_no_submissions'));
 
         $form = $this->createForm(ContestType::class, $contest);
 

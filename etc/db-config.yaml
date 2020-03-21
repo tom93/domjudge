@@ -189,6 +189,11 @@
             default_value: true
             public: true
             description: Show problem columns with submission information on the public and team scoreboards?
+        -   name: show_teams_with_no_submissions
+            type: bool
+            default_value: true
+            public: true
+            description: Should teams that have not made any submissions be included in the scoreboards of new contests?
         -   name: show_compile
             type: int
             default_value: 2

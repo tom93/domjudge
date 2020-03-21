@@ -639,6 +639,8 @@ class ScoreboardService
             }
         }
 
+        $scoreFilter['teams'] = []; // forbidden because it bypasses the flag that hides teams with no submissions
+
         $this->dj->setCookie(
             'domjudge_scorefilter',
             $this->dj->jsonEncode($scoreFilter),
@@ -757,7 +759,19 @@ class ScoreboardService
                     ->join('t.category', 'cat')
                     ->leftJoin('cat.contests', 'cc')
                     ->andWhere('c = :contest OR cc = :contest')
-                    ->setParameter(':contest', $contest);
+                    ->setParameter('contest', $contest);
+                // avoid colon in parameter name that is set twice because of Doctrine ORM issue #8106
+            }
+            if (!$contest->isShowTeamsWithNoSubmissions()) {
+                $attemptedQuery = $this->em->createQueryBuilder()
+                    ->from(ScoreCache::class, 's')
+                    ->select('1')
+                    ->andWhere('s.contest = :contest')
+                    ->andWhere('s.team = t')
+                    ->andWhere('s.submissions_public + s.pending_public > 0');
+                $queryBuilder
+                    ->andWhere($queryBuilder->expr()->exists($attemptedQuery->getDql()))
+                    ->setParameter('contest', $contest);
             }
 
             /** @var TeamAffiliation[] $affiliations */
@@ -865,6 +879,22 @@ class ScoreboardService
                 ->leftJoin('cat.contests', 'cc')
                 ->andWhere('c.cid = :cid OR cc.cid = :cid')
                 ->setParameter(':cid', $contest->getCid());
+        }
+
+        if (!$contest->isShowTeamsWithNoSubmissions()) {
+            if ($filter && $filter->teams) {
+                // specific teams requested (e.g. for team's summary); show them even if they have no submissions
+            } else {
+                $attemptedQuery = $this->em->createQueryBuilder()
+                    ->from(ScoreCache::class, 's')
+                    ->select('1')
+                    ->andWhere('s.contest = :contest')
+                    ->andWhere('s.team = t')
+                    ->andWhere('s.submissions_public + s.pending_public > 0');
+                $queryBuilder
+                    ->andWhere($queryBuilder->expr()->exists($attemptedQuery->getDql()))
+                    ->setParameter(':contest', $contest);
+            }
         }
 
         if (!$jury) {
