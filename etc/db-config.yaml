@@ -184,6 +184,11 @@
             default_value: false
             public: true
             description: Show affiliation logos on the scoreboard?
+        -   name: show_new_affiliation_option
+            type: bool
+            default_value: true
+            public: true
+            description: Allow teams to create new affiliations during self-registration?
         -   name: show_teams_submissions
             type: bool
             default_value: true
