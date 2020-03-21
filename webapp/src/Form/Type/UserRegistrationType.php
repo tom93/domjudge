@@ -111,18 +111,22 @@ class UserRegistrationType extends AbstractType
                 $countries["$name ($alpha3)"] = $alpha3;
             }
 
+            $affiliationChoices = [];
+            $affiliationChoices['Use existing affiliation'] = 'existing';
+            if ($this->config->get('show_new_affiliation_option')) {
+                $affiliationChoices['Add new affiliation'] = 'new';
+            }
+            $affiliationChoices['No affiliation'] = 'none';
+
             $builder
                 ->add('affiliation', ChoiceType::class, [
-                    'choices' => [
-                        'Use existing affiliation' => 'existing',
-                        'Add new affiliation' => 'new',
-                        'No affiliation' => 'none',
-                    ],
+                    'choices' => $affiliationChoices,
                     'expanded' => true,
                     'mapped' => false,
                     'label' => false,
-                ])
-                ->add('affiliationName', TextType::class, [
+                ]);
+            if ($this->config->get('show_new_affiliation_option')) {
+                $builder->add('affiliationName', TextType::class, [
                     'label' => false,
                     'required' => false,
                     'attr' => [
@@ -139,14 +143,15 @@ class UserRegistrationType extends AbstractType
                     ],
                     'mapped' => false,
                 ]);
-            if ($this->config->get('show_flags')) {
-                $builder->add('affiliationCountry', ChoiceType::class, [
-                    'label' => false,
-                    'required' => false,
-                    'mapped' => false,
-                    'choices' => $countries,
-                    'placeholder' => 'No country',
-                ]);
+                if ($this->config->get('show_flags')) {
+                    $builder->add('affiliationCountry', ChoiceType::class, [
+                        'label' => false,
+                        'required' => false,
+                        'mapped' => false,
+                        'choices' => $countries,
+                        'placeholder' => 'No country',
+                    ]);
+                }
             }
             $builder->add('existingAffiliation', EntityType::class, [
                     'class' => TeamAffiliation::class,
