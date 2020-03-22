@@ -136,7 +136,7 @@ class UserRegistrationType extends AbstractType
             $specialAffiliationChoices = [];
             $specialAffiliationChoices['No affiliation'] = 'none';
             if ($this->config->get('show_new_affiliation_option')) {
-                $specialAffiliationChoices['Add new affiliation'] = 'new';
+                $specialAffiliationChoices['Add affiliation...'] = 'new';
             }
             $affiliations = [];
             foreach ($this->em->getRepository(TeamAffiliation::class)->findAll() as $affiliation) {
