@@ -113,7 +113,7 @@ class UserRegistrationType extends AbstractType
 
             $specialAffiliationChoices = [];
             if ($this->config->get('show_new_affiliation_option')) {
-                $specialAffiliationChoices['Add new affiliation'] = 'new';
+                $specialAffiliationChoices['Add affiliation...'] = 'new';
             }
             $specialAffiliationChoices['No affiliation'] = 'none';
             $affiliations = [];
