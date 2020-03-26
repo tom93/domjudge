@@ -31,17 +31,19 @@ ADD https://getcomposer.org/installer composer-setup.php
 RUN php composer-setup.php \
     && mv /composer.phar /usr/local/bin/composer
 
+RUN mkdir /domjudge-src
+
 # Install PHP dependencies
 # (also done by 'make dist', but we do it here *before* adding the rest of the source to leverage the build cache)
-COPY composer.json composer.lock /domjudge-src/domjudge/
-RUN cd /domjudge-src/domjudge && composer install --prefer-dist -o --no-scripts
+COPY --chown=domjudge composer.json composer.lock /domjudge-src/domjudge/
+RUN cd /domjudge-src/domjudge && sudo -u domjudge composer install --prefer-dist -o --no-scripts
 
 # Add DOMjudge source code and build script
-COPY . /domjudge-src/domjudge
+COPY --chown=domjudge . /domjudge-src/domjudge
 ADD docker/domserver/build.sh /domjudge-src
 
 # Bootstrap the configure/build system
-RUN make -C /domjudge-src/domjudge dist
+RUN sudo -u domjudge make -C /domjudge-src/domjudge dist
 
 # Build and install domserver
 RUN /domjudge-src/build.sh
@@ -70,20 +72,24 @@ RUN apt-get update \
 	enscript lpr \
 	&& rm -rf /var/lib/apt/lists/*
 
+# Set up user
+RUN useradd -m domjudge
+
 # Install composer
 ADD https://getcomposer.org/installer composer-setup.php
 RUN php composer-setup.php \
     && mv /composer.phar /usr/local/bin/composer
 
+RUN mkdir /opt/domjudge && chown domjudge: /opt/domjudge
+
 # Copy domserver directory and add script files
-COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
-COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
+COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjudge/domserver
+COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
 COPY ["docker/domserver/scripts", "/scripts/"]
 
-# Add user, create PHP FPM socket dir, change permissions for domjudge directory and fix scripts
-RUN useradd -m domjudge \
-	&& mkdir -p /run/php \
-	&& chown -R domjudge: /opt/domjudge \
+# Create PHP FPM socket dir, change ownership of some domjudge directories and fix scripts
+# ("chown -R domjudge: /opt/domjudge" not required; verify using "chown --changes ...")
+RUN mkdir -p /run/php \
 	&& chown -R www-data: /opt/domjudge/domserver/tmp \
 	# for DOMjudge <= 7.2 (submitdir was removed in commit DOMjudge/domjudge@d66725038)
 	&& if [ -d /opt/domjudge/domserver/submissions ]; then chown -R www-data: /opt/domjudge/domserver/submissions; fi \
