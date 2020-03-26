@@ -31,6 +31,11 @@ ADD https://getcomposer.org/installer composer-setup.php
 RUN php composer-setup.php \
     && mv /composer.phar /usr/local/bin/composer
 
+# Install PHP dependencies
+# (also done by 'make dist', but we do it here *before* adding the rest of the source to leverage the build cache)
+COPY composer.json composer.lock /domjudge-src/domjudge/
+RUN cd /domjudge-src/domjudge && composer install --prefer-dist -o --no-scripts
+
 # Add DOMjudge source code and build script
 COPY . /domjudge-src/domjudge
 ADD docker/domserver/build.sh /domjudge-src
