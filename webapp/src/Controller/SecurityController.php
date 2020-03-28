@@ -152,6 +152,10 @@ class SecurityController extends AbstractController
                 ->setCategory($teamCategory)
                 ->setComments('Registered by ' . $this->dj->getClientIp() . ' on ' . date('r'));
 
+            if ($this->config->get('show_team_managers')) {
+                $team->setTeamManagerName($registration_form->get('teamManagerName')->getData());
+            }
+
             if ($this->config->get('show_team_members')) {
                 $team->setMembers($registration_form->get('members')->getData());
             }

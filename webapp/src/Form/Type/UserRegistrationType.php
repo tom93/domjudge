@@ -99,6 +99,20 @@ class UserRegistrationType extends AbstractType
                 'mapped' => false,
             ]);
 
+        if ($this->config->get('show_team_managers')) {
+            $builder
+                ->add('teamManagerName', TextType::class, [
+                    'label' => false,
+                    'attr' => [
+                        'placeholder' => 'Team manager name',
+                    ],
+                    'constraints' => [
+                        new NotBlank(),
+                    ],
+                    'mapped' => false,
+                ]);
+        }
+
         $selfRegistrationCategoriesCount = $this->em->getRepository(TeamCategory::class)->count(['allow_self_registration' => 1]);
         if ($selfRegistrationCategoriesCount > 1) {
             $builder

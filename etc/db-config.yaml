@@ -194,6 +194,11 @@
             default_value: true
             public: true
             description: Allow teams to create new affiliations during self-registration?
+        -   name: show_team_managers
+            type: bool
+            default_value: false
+            public: true
+            description: Show team manager name in the interfaces?
         -   name: show_teams_submissions
             type: bool
             default_value: true

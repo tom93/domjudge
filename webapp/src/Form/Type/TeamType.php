@@ -60,6 +60,10 @@ class TeamType extends AbstractExternalIdEntityType
                 return $er->createQueryBuilder('a')->orderBy('a.name');
             },
         ]);
+        $builder->add('team_manager_name', TextType::class, [
+            'label' => 'Team manager name',
+            'required' => false,
+        ]);
         $builder->add('penalty', IntegerType::class, [
             'label' => 'Penalty time',
         ]);

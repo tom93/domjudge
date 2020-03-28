@@ -74,6 +74,14 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
     private $affilid;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", name="team_manager_name", length=255, options={"comment"="Team manager name", "collation"="utf8mb4_bin"},
+     *                            nullable=true)
+     * @Serializer\Exclude()
+     */
+    private $team_manager_name;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", name="enabled",
      *     options={"comment"="Whether the team is visible and operational",
@@ -316,6 +324,30 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
     public function getAffilid()
     {
         return $this->affilid;
+    }
+
+    /**
+     * Set team manager name
+     *
+     * @param string $teamManagerName
+     *
+     * @return Team
+     */
+    public function setTeamManagerName($teamManagerName)
+    {
+        $this->team_manager_name = $teamManagerName;
+
+        return $this;
+    }
+
+    /**
+     * Get team manager name
+     *
+     * @return string
+     */
+    public function getTeamManagerName()
+    {
+        return $this->team_manager_name;
     }
 
     /**
