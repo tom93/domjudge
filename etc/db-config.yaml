@@ -164,6 +164,11 @@
             default_value: true
             public: true
             description: Show pending submissions on the scoreboard?
+        -   name: show_user_emails
+            type: bool
+            default_value: true
+            public: true
+            description: Show user email addresses in the interfaces?
         -   name: show_team_members
             type: bool
             default_value: true

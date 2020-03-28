@@ -102,7 +102,11 @@ class UserController extends BaseController
         $table_fields = [
             'username' => ['title' => 'username', 'sort' => true, 'default_sort' => true],
             'name' => ['title' => 'name', 'sort' => true],
-            'email' => ['title' => 'email', 'sort' => true],
+        ];
+        if ($this->config->get('show_user_emails')) {
+            $table_fields['email'] = ['title' => 'email', 'sort' => true];
+        }
+        $table_fields += [
             'user_roles' => ['title' => 'roles', 'sort' => true],
             'team' => ['title' => 'team', 'sort' => true],
             'status' => ['title' => '', 'sort' => true],
@@ -202,7 +206,10 @@ class UserController extends BaseController
             throw new NotFoundHttpException(sprintf('User with ID %s not found', $userId));
         }
 
-        return $this->render('jury/user.html.twig', ['user' => $user]);
+        return $this->render('jury/user.html.twig', [
+            'user' => $user,
+            'showUserEmails' => (bool)$this->config->get('show_user_emails'),
+        ]);
     }
 
     /**
