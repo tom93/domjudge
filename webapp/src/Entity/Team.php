@@ -74,6 +74,15 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface,
      */
     private ?string $display_name = null;
 
+    /*
+     * @ORM\Column(type="string", name="team_manager_name", length=255,
+     *                            options={"comment"="Team manager name", "collation"="utf8mb4_bin"},
+     *                            nullable=true)
+     * @Serializer\Exclude()
+     * @OA\Property(nullable=true)
+     */
+    private ?string $team_manager_name = null;
+
     /**
      * @ORM\Column(type="boolean", name="enabled",
      *     options={"comment"="Whether the team is visible and operational",
@@ -270,6 +279,17 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface,
     public function getShortDescription(): string
     {
         return $this->getEffectiveName();
+    }
+
+    public function setTeamManagerName(string $teamManagerName): Team
+    {
+        $this->team_manager_name = $teamManagerName;
+        return $this;
+    }
+
+    public function getTeamManagerName(): ?string
+    {
+        return $this->team_manager_name;
     }
 
     public function setEnabled(bool $enabled): Team
