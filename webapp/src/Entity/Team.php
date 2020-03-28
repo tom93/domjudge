@@ -82,6 +82,15 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
     private $team_manager_name;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", name="team_manager_email", length=255, options={"comment"="Team manager email", "collation"="utf8mb4_bin"},
+     *                            nullable=true)
+     * @Serializer\Exclude()
+     * @Assert\Email()
+     */
+    private $team_manager_email;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", name="enabled",
      *     options={"comment"="Whether the team is visible and operational",
@@ -348,6 +357,30 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
     public function getTeamManagerName()
     {
         return $this->team_manager_name;
+    }
+
+    /**
+     * Set team manager email
+     *
+     * @param string $teamManagerEmail
+     *
+     * @return Team
+     */
+    public function setTeamManagerEmail($teamManagerEmail)
+    {
+        $this->team_manager_email = $teamManagerEmail;
+
+        return $this;
+    }
+
+    /**
+     * Get team manager email
+     *
+     * @return string
+     */
+    public function getTeamManagerEmail()
+    {
+        return $this->team_manager_email;
     }
 
     /**

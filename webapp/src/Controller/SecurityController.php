@@ -155,6 +155,9 @@ class SecurityController extends AbstractController
             if ($this->config->get('show_team_managers')) {
                 $team->setTeamManagerName($registration_form->get('teamManagerName')->getData());
             }
+            if ($this->config->get('show_team_manager_emails')) {
+                $team->setTeamManagerEmail($registration_form->get('teamManagerEmail')->getData());
+            }
 
             if ($this->config->get('show_team_members')) {
                 $team->setMembers($registration_form->get('members')->getData());

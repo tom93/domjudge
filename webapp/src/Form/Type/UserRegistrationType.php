@@ -112,6 +112,17 @@ class UserRegistrationType extends AbstractType
                     'mapped' => false,
                 ]);
         }
+        if ($this->config->get('show_team_manager_emails')) {
+            $builder
+                ->add('teamManagerEmail', EmailType::class, [
+                    'label' => false,
+                    'attr' => [
+                        'placeholder' => 'Team manager email address',
+                    ],
+                    'constraints' => new Email(),
+                    'mapped' => false,
+                ]);
+        }
 
         $selfRegistrationCategoriesCount = $this->em->getRepository(TeamCategory::class)->count(['allow_self_registration' => 1]);
         if ($selfRegistrationCategoriesCount > 1) {

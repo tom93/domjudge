@@ -128,6 +128,18 @@
                         <td>{{ team.teamManagerName }}</td>
                     </tr>
                 {% endif %}
+                {% if showTeamManagerEmails %}
+                    <tr>
+                        <th>Team manager email</th>
+                        <td>
+                            {% if team.teamManagerEmail %}
+                                <a href="mailto:{{ team.teamManagerEmail }}">{{ team.teamManagerEmail }}</a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endif %}
                 {% if team.contests|length > 0 %}
                 <tr>
                     <th>Contests</th>

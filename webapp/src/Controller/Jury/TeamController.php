@@ -291,6 +291,7 @@ class TeamController extends BaseController
             'showAffiliations' => (bool)$this->config->get('show_affiliations'),
             'showFlags' => (bool)$this->config->get('show_flags'),
             'showTeamManagers' => (bool)$this->config->get('show_team_managers'),
+            'showTeamManagerEmails' => (bool)$this->config->get('show_team_manager_emails'),
             'showContest' => count($this->dj->getCurrentContests()) > 1,
             'maxWidth' => $this->dj->dbconfig_get("team_column_width", 0),
         ];

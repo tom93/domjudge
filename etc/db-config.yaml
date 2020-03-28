@@ -199,6 +199,11 @@
             default_value: false
             public: true
             description: Show team manager name in the interfaces?
+        -   name: show_team_manager_emails
+            type: bool
+            default_value: false
+            public: true
+            description: Show team manager email addresses in the interfaces?
         -   name: show_teams_submissions
             type: bool
             default_value: true
