@@ -64,16 +64,20 @@ class UserRegistrationType extends AbstractType
                     'placeholder' => 'Full name (optional)',
                     'autocomplete' => 'name',
                 ],
-            ])
-            ->add('email', EmailType::class, [
-                'label' => false,
-                'required' => false,
-                'attr' => [
-                    'placeholder' => 'Email address (optional)',
-                    'autocomplete' => 'email',
-                ],
-                'constraints' => new Email(),
-            ])
+            ]);
+        if ($this->config->get('show_user_emails')) {
+            $builder
+                ->add('email', EmailType::class, [
+                    'label' => false,
+                    'required' => false,
+                    'attr' => [
+                        'placeholder' => 'Email address (optional)',
+                        'autocomplete' => 'email',
+                    ],
+                    'constraints' => new Email(),
+                ]);
+        }
+        $builder
             ->add('teamName', TextType::class, [
                 'label' => false,
                 'attr' => [
