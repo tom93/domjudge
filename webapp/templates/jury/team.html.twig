@@ -132,6 +132,12 @@
                         </td>
                     </tr>
                 {% endif %}
+                {% if showTeamManagers %}
+                    <tr>
+                        <th>Team manager name</th>
+                        <td>{{ team.teamManagerName }}</td>
+                    </tr>
+                {% endif %}
                 {% if team.contests|length > 0 %}
                 <tr>
                     <th>Contests</th>
