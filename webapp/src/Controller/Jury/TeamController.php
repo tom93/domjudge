@@ -92,6 +92,7 @@ class TeamController extends BaseController
             'effective_name' => ['title' => 'name', 'sort' => true,],
             'category' => ['title' => 'category', 'sort' => true,],
             'affiliation' => ['title' => 'affiliation', 'sort' => true,],
+            'team_manager_name' => ['title' => 'team manager', 'sort' => true,],
             'num_contests' => ['title' => '# contests', 'sort' => true,],
             'ip_address' => ['title' => 'last IP', 'sort' => true,],
             'location' => ['title' => 'location', 'sort' => true,],
@@ -249,6 +250,7 @@ class TeamController extends BaseController
             'team' => $team,
             'showAffiliations' => (bool)$this->config->get('show_affiliations'),
             'showFlags' => (bool)$this->config->get('show_flags'),
+            'showTeamManagers' => (bool)$this->config->get('show_team_managers'),
             'showContest' => count($this->dj->getCurrentContests()) > 1,
             'maxWidth' => $this->config->get("team_column_width"),
         ];
