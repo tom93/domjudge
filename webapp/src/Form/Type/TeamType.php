@@ -12,6 +12,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -68,6 +69,10 @@ class TeamType extends AbstractType
         ]);
         $builder->add('team_manager_name', TextType::class, [
             'label' => 'Team manager name',
+            'required' => false,
+        ]);
+        $builder->add('team_manager_email', EmailType::class, [
+            'label' => 'Team manager email',
             'required' => false,
         ]);
         $builder->add('penalty', IntegerType::class, [
