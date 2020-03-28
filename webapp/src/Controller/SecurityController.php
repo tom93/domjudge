@@ -140,6 +140,10 @@ class SecurityController extends AbstractController
                 ->setCategory($teamCategory)
                 ->setInternalComments('Registered by ' . $this->dj->getClientIp() . ' on ' . date('r'));
 
+            if ($this->config->get('show_team_managers')) {
+                $team->setTeamManagerName($registration_form->get('teamManagerName')->getData());
+            }
+
             if ($this->config->get('show_team_members_in_registration')) {
                 if ($this->config->get('show_team_members_publicly')) {
                     $team->setPublicDescription("Members:\n" . $registration_form->get('members')->getData());
