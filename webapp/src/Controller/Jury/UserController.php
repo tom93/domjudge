@@ -75,7 +75,11 @@ class UserController extends BaseController
         $table_fields = [
             'username'   => ['title' => 'username', 'sort' => true, 'default_sort' => true],
             'name'       => ['title' => 'name', 'sort' => true],
-            'email'      => ['title' => 'email', 'sort' => true],
+        ];
+        if ($this->config->get('show_user_emails')) {
+            $table_fields['email'] = ['title' => 'email', 'sort' => true];
+        }
+        $table_fields += [
             'user_roles' => ['title' => 'roles', 'sort' => true],
             'teamid'     => ['title' => '', 'sort' => false, 'render' => 'entity_id_badge'],
             'team'       => ['title' => 'team', 'sort' => true],
@@ -210,6 +214,7 @@ class UserController extends BaseController
             'submissions' => $submissions,
             'submissionCounts' => $submissionCounts,
             'showContest' => count($this->dj->getCurrentContests()) > 1,
+            'showUserEmails' => (bool)$this->config->get('show_user_emails'),
             'showExternalResult' => $this->config->get('data_source') ===
                 DOMJudgeService::DATA_SOURCE_CONFIGURATION_AND_LIVE_EXTERNAL,
             'refresh' => [
