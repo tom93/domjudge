@@ -78,6 +78,10 @@ class TeamType extends AbstractExternalIdEntityType
             'placeholder'   => '-- no affiliation --',
             'query_builder' => fn(EntityRepository $er) => $er->createQueryBuilder('a')->orderBy('a.name'),
         ]);
+        $builder->add('team_manager_name', TextType::class, [
+            'label' => 'Team manager name',
+            'required' => false,
+        ]);
         $builder->add('penalty', IntegerType::class, [
             'label' => 'Penalty time',
         ]);
