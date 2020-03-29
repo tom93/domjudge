@@ -2,6 +2,7 @@
 
 namespace App\Form\Type;
 
+use App\Entity\ContestSite;
 use App\Entity\Team;
 use App\Entity\TeamAffiliation;
 use App\Entity\TeamCategory;
@@ -142,6 +143,29 @@ class UserRegistrationType extends AbstractType
                     'attr' => [
                         'placeholder' => 'Category',
                     ],
+                    'constraints' => [
+                        new NotBlank(),
+                    ],
+                ]);
+        }
+
+        $contestSitesCount = $this->em->getRepository(ContestSite::class)->count(['active' => 1]);
+        if ($contestSitesCount > 1) {
+            $builder
+                ->add('contestSite', EntityType::class, [
+                    'class' => ContestSite::class,
+                    'label' => false,
+                    'mapped' => false,
+                    'choice_label' => 'name',
+                    'placeholder' => '-- Select contest site --',
+                    'query_builder' => function (EntityRepository $er) {
+                        return $er
+                            ->createQueryBuilder('s')
+                            ->where('s.active = 1')
+                            ->orderBy('s.sortorder')
+                            ->addOrderBy('s.name', 'ASC')
+                            ->addOrderBy('s.siteid');
+                    },
                     'constraints' => [
                         new NotBlank(),
                     ],

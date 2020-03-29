@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\ContestSite;
 use App\Entity\Role;
 use App\Entity\Team;
 use App\Entity\TeamAffiliation;
@@ -151,6 +152,13 @@ class SecurityController extends AbstractController
                 ->setName($teamName)
                 ->setCategory($teamCategory)
                 ->setComments('Registered by ' . $this->dj->getClientIp() . ' on ' . date('r'));
+
+            $contestSitesCount = $em->getRepository(ContestSite::class)->count(['active' => 1]);
+            if ($contestSitesCount === 1) {
+                $team->setSite($em->getRepository(ContestSite::class)->findOneBy(['active' => 1]));
+            } elseif ($contestSitesCount > 1) {
+                $team->setSite($registration_form->get('contestSite')->getData());
+            }
 
             if ($this->config->get('show_team_managers')) {
                 $team->setTeamManagerName($registration_form->get('teamManagerName')->getData());
