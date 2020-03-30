@@ -1,0 +1,23 @@
+{% extends "jury/base.html.twig" %}
+{% import "jury/jury_macros.twig" as macros %}
+
+{% block title %}Sites - {{ parent() }}{% endblock %}
+
+{% block extrahead %}
+    {{ parent() }}
+    {{ macros.table_extrahead() }}
+{% endblock %}
+
+{% block content %}
+
+    <h1>Sites</h1>
+
+    {{ macros.table(contest_sites, table_fields, num_actions) }}
+
+    {% if is_granted('ROLE_ADMIN') %}
+        <p>
+            {{ button(path('jury_contest_site_add'), 'Add new site', 'primary', 'plus') }}
+        </p>
+    {% endif %}
+
+{% endblock %}
