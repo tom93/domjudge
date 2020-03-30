@@ -61,10 +61,11 @@ class TeamController extends BaseController
     {
         /** @var Team[] $teams */
         $teams = $this->em->createQueryBuilder()
-            ->select('t', 'c', 'a', 'cat')
+            ->select('t', 'c', 'a', 's', 'cat')
             ->from(Team::class, 't')
             ->leftJoin('t.contests', 'c')
             ->leftJoin('t.affiliation', 'a')
+            ->leftJoin('t.site', 's')
             ->leftJoin('t.category', 'cat')
             ->leftJoin('cat.contests', 'cc')
             ->orderBy('cat.sortorder', 'ASC')
@@ -107,6 +108,7 @@ class TeamController extends BaseController
             'icpcid' => ['title' => 'ICPC ID', 'sort' => true,],
             'effective_name' => ['title' => 'name', 'sort' => true,],
             'category' => ['title' => 'category', 'sort' => true,],
+            'site' => ['title' => 'site', 'sort' => true,],
             'affiliation' => ['title' => 'affiliation', 'sort' => true,],
             'team_manager_name' => ['title' => 'team manager', 'sort' => true,],
             'num_contests' => ['title' => '# contests', 'sort' => true,],
