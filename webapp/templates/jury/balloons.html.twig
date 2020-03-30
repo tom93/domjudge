@@ -46,6 +46,21 @@
                     </div>
                 </div>
 
+                <div class="form-row">
+                    <div class="form-group col-sm-6">
+                        <label for="site-filter">Filter on contest site(s)</label>
+                        <select class="select2 form-control" multiple data-filter-field="site-id"
+                                data-ajax-url="{{ path('jury_ajax_data', {datatype: 'sites', select2: true}) }}">
+                            {%- for site in filteredSites %}
+                                <option value="{{ site.siteid }}" selected>
+                                    {{ site.name }}
+                                </option>
+                            {%- endfor %}
+
+                        </select>
+                    </div>
+                </div>
+
                 <button class="btn btn-secondary" id="clear-filters"><i class="fas fa-times-circle"></i> Clear all
                     filters
                 </button>
