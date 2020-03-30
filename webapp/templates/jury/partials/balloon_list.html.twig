@@ -25,7 +25,8 @@
         {%- for balloon in balloons %}
             <tr class="{% if balloon.data.done %}disabled{% endif %}"
                 data-affiliation-id="{{ balloon.data.affiliationid }}"
-                data-location-str="{{ balloon.data.location }}">
+                data-location-str="{{ balloon.data.location }}"
+                data-site-id="{{ balloon.data.siteid }}">
                 <td>
                 {%- if balloon.data.done -%}
                     <i class="far fa-check-circle"></i>

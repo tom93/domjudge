@@ -4,6 +4,7 @@ namespace App\Controller\Jury;
 
 use App\Controller\BaseController;
 use App\Entity\Contest;
+use App\Entity\ContestSite;
 use App\Entity\Judging;
 use App\Entity\Language;
 use App\Entity\Problem;
@@ -178,6 +179,22 @@ class JuryMiscController extends BaseController
                     'text' => $displayname,
                 ];
             }, $affiliations);
+        } elseif ($datatype === 'sites') {
+            $sites = $qb->from(ContestSite::class, 's')
+                ->select('s.siteid', 's.name')
+                ->where($qb->expr()->like('s.name', '?1'))
+                ->orWhere($qb->expr()->eq('s.siteid', '?2'))
+                ->orderBy('s.name', 'ASC')
+                ->getQuery()->setParameter(1, '%' . $q . '%')
+                ->setParameter(2, $q)
+                ->getResult();
+
+            $results = array_map(function (array $site) {
+                return [
+                    'id' => $site['siteid'],
+                    'text' => $site['name'],
+                ];
+            }, $sites);
         } else {
             throw new NotFoundHttpException("Unknown AJAX data type: " . $datatype);
         }
