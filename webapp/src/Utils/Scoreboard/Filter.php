@@ -8,12 +8,14 @@ class Filter
      * @param int[] $affiliations
      * @param string[] $countries
      * @param int[] $categories
+     * @param int[] $sites
      * @param int[] $teams
      */
     public function __construct(
         public array $affiliations = [],
         public array $countries = [],
         public array $categories = [],
+        public array $sites = [],
         public array $teams = []
     ) {}
 
@@ -31,6 +33,9 @@ class Filter
         }
         if ($this->categories) {
             $filteredOn[] = 'categories';
+        }
+        if ($this->sites) {
+            $filteredOn[] = 'sites';
         }
         if ($this->teams) {
             $filteredOn[] = 'teams';
