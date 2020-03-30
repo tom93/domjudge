@@ -100,6 +100,7 @@ class BalloonService
             ->select('b', 's.submittime', 'p.probid',
                 't.teamid', 't.name AS teamname', 't.room',
                 'c.name AS catname',
+                'site.name AS sitename',
                 'co.cid', 'co.shortname',
                 'cp.shortname AS probshortname', 'cp.color',
                 'a.affilid AS affilid', 'a.shortname AS affilshort')
@@ -110,6 +111,7 @@ class BalloonService
             ->leftJoin('p.contest_problems', 'cp', Join::WITH, 'co.cid = cp.contest AND p.probid = cp.problem')
             ->leftJoin('s.team', 't')
             ->leftJoin('t.category', 'c')
+            ->leftJoin('t.site', 'site')
             ->leftJoin('t.affiliation', 'a')
             ->andWhere('co.cid = :cid')
             ->setParameter('cid', $contest->getCid())
@@ -169,6 +171,7 @@ class BalloonService
             $balloondata['affiliation'] = $balloonsData['affilshort'];
             $balloondata['affiliationid'] = $balloonsData['affilid'];
             $balloondata['category'] = $balloonsData['catname'];
+            $balloondata['site'] = $balloonsData['sitename'];
 
             ksort($TOTAL_BALLOONS[$balloonsData['teamid']]);
             $balloondata['total'] = $TOTAL_BALLOONS[$balloonsData['teamid']];
