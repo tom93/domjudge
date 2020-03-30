@@ -15,6 +15,12 @@
                     <th>Category</th>
                     <td>{{ team.category.name }}</td>
                 </tr>
+                {% if team.site %}
+                    <tr>
+                        <th>Site</th>
+                        <td>{{ team.site.name }}</td>
+                    </tr>
+                {% endif %}
                 {% if showTeamMembers and team.members is not empty %}
                     <tr>
                         <th>Members</th>
