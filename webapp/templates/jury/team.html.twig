@@ -90,6 +90,16 @@
                         </a>
                     </td>
                 </tr>
+                {% if team.site %}
+                    <tr>
+                        <th>Site</th>
+                        <td>
+                            <a href="{{ path('jury_contest_site', {'siteId': team.site.siteid}) }}">
+                                {{ team.site.name }}
+                            </a>
+                        </td>
+                    </tr>
+                {% endif %}
                 {% if showAffiliations and team.affiliation %}
                     <tr>
                         <th>Affiliation</th>

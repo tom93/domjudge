@@ -3,6 +3,7 @@
 namespace App\Form\Type;
 
 use App\Entity\Contest;
+use App\Entity\ContestSite;
 use App\Entity\Team;
 use App\Entity\TeamAffiliation;
 use App\Entity\TeamCategory;
@@ -48,6 +49,17 @@ class TeamType extends AbstractExternalIdEntityType
         ]);
         $builder->add('category', EntityType::class, [
             'class' => TeamCategory::class,
+        ]);
+        $builder->add('site', EntityType::class, [
+            'class' => ContestSite::class,
+            'required' => false,
+            'placeholder' => '-- no site --',
+            'query_builder' => function (EntityRepository $er) {
+                return $er->createQueryBuilder('s')
+                    ->orderBy('s.sortorder')
+                    ->addOrderBy('s.name', 'ASC')
+                    ->addOrderBy('s.siteid');
+            },
         ]);
         $builder->add('members', TextareaType::class, [
             'required' => false,
