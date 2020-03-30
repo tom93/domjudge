@@ -2,6 +2,7 @@
 
 namespace App\Controller\Jury;
 
+use App\Entity\ContestSite;
 use App\Entity\Team;
 use App\Entity\TeamAffiliation;
 use App\Entity\TeamCategory;
@@ -102,6 +103,17 @@ class BalloonController extends AbstractController
                 ->getQuery()
                 ->getResult();
         }
+        $filteredSites = [];
+        if (isset($filters['site-id'])) {
+            /** @var ContestSite[] $filteredSites */
+            $filteredSites = $this->em->createQueryBuilder()
+                ->from(ContestSite::class, 's')
+                ->select('s')
+                ->where('s.siteid IN (:siteIds)')
+                ->setParameter(':siteIds', $filters['site-id'])
+                ->getQuery()
+                ->getResult();
+        }
         if (!$haveFilters) {
             /** @var TeamCategory[] $filteredCategories */
             $filteredCategories = $this->em->createQueryBuilder()
@@ -159,6 +171,7 @@ class BalloonController extends AbstractController
             'isfrozen' => isset($contest->getState()->frozen),
             'hasFilters' => !$this->areDefault($filters, $defaultCategories),
             'filteredAffiliations' => $filteredAffiliations,
+            'filteredSites' => $filteredSites,
             'filteredLocations' => $filteredLocations,
             'filteredCategories' => $filteredCategories,
             'availableCategories' => $availableCategories,
