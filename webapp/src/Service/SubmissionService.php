@@ -203,6 +203,12 @@ class SubmissionService
                 ->andWhere('cat.visible = true');
         }
 
+        if (isset($restrictions->siteId)) {
+            $queryBuilder
+                ->andWhere('t.site = :siteid')
+                ->setParameter(':siteid', $restrictions->siteId);
+        }
+
         if (isset($restrictions->problemId)) {
             $queryBuilder
                 ->andWhere('s.problem = :probid')
