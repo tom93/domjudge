@@ -1,0 +1,15 @@
+{# based on team_category_edit.html.twig #}
+{% extends "jury/base.html.twig" %}
+{% import "jury/jury_macros.twig" as macros %}
+
+{% block title %}Edit site {{ contestSite.siteid }} - {{ parent() }}{% endblock %}
+
+{# we don't call macros.coloris_extrahead because we don't need a color picker #}
+
+{% block content %}
+
+    <h1>Edit site {{ contestSite.siteid }}</h1>
+
+    {% include 'jury/partials/contest_site_form.html.twig' %}
+
+{% endblock %}

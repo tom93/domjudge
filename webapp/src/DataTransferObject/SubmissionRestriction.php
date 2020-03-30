@@ -17,6 +17,7 @@ class SubmissionRestriction
      *                                         original result in final verdict. Vice versa if false
      * @param int|null    $teamId              ID of a team to filter on
      * @param int|null    $categoryId          ID of a category to filter on
+     * @param int|null    $siteId              ID of a contest site to filter on
      * @param int|null    $problemId           ID of a problem to filter on
      * @param string|null $languageId          ID of a language to filter on
      * @param string|null $judgehost           Hostname of a judgehost to filter on
@@ -43,6 +44,7 @@ class SubmissionRestriction
         public ?bool $rejudgingDifference = null,
         public ?int $teamId = null,
         public ?int $categoryId = null,
+        public ?int $siteId = null,
         public ?int $problemId = null,
         public ?string $languageId = null,
         public ?string $judgehost = null,
