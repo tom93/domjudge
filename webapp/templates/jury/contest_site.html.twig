@@ -1,0 +1,81 @@
+{% extends "jury/base.html.twig" %}
+{% import "jury/jury_macros.twig" as macros %}
+
+{% block title %}Site {{ contestSite.siteid }} - {{ parent() }}{% endblock %}
+
+{% block extrahead %}
+    {{ parent() }}
+    {{ macros.table_extrahead() }}
+{% endblock %}
+
+{% block content %}
+
+    <h1>Site {{ contestSite.siteid }}</h1>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <table class="table table-sm table-striped">
+                <tr>
+                    <th>ID</th>
+                    <td>{{ contestSite.siteid }}</td>
+                </tr>
+                <tr>
+                    <th>Name</th>
+                    <td>{{ contestSite.name }}</td>
+                </tr>
+                <tr>
+                    <th>Sortorder</th>
+                    <td>{{ contestSite.sortorder }}</td>
+                </tr>
+                <tr>
+                    <th>Active</th>
+                    <td>{{ contestSite.active | printYesNo }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    {%- if is_granted('ROLE_ADMIN') -%}
+        <p>
+            {{ button(path('jury_contest_site_edit', {'siteId': contestSite.siteid}), 'Edit', 'primary', 'edit') }}
+            {{ button(path('jury_contest_site_delete', {'siteId': contestSite.siteid}), 'Delete', 'danger', 'trash-alt', true) }}
+        </p>
+    {% endif %}
+
+    <h2>Teams in {{ contestSite.name }}</h2>
+    {% if contestSite.teams is empty %}
+        <p class="nodata">no teams</p>
+    {% else %}
+        <div class="row">
+            <div class="col-lg-4">
+                <table class="data-table table table-sm table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Teamname</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for team in contestSite.teams %}
+                        <tr>
+                            <td>
+                                <a href="{{ path('jury_team', {'teamId': team.teamid}) }}">{{ team.teamid }}</a>
+                            </td>
+                            <td>
+                                <a href="{{ path('jury_team', {'teamId': team.teamid}) }}">{{ team.effectiveName }}</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2>Submissions for {{ contestSite.name }}</h2>
+
+        <div data-ajax-refresh-target>
+            {%- include 'jury/partials/submission_list.html.twig' with {showTestcases: false} %}
+        </div>
+    {% endif %}
+
+{% endblock %}
