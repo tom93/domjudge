@@ -1,0 +1,12 @@
+{% extends "jury/base.html.twig" %}
+{% import "jury/jury_macros.twig" as macros %}
+
+{% block title %}Add site - {{ parent() }}{% endblock %}
+
+{% block content %}
+
+    <h1>Add site</h1>
+
+    {% include 'jury/partials/contest_site_form.html.twig' %}
+
+{% endblock %}

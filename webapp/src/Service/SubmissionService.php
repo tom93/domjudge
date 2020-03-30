@@ -82,6 +82,7 @@ class SubmissionService
      *                  original result in final verdict. Vice versa if false.
      * - teamid: ID of a team to filter on
      * - categoryid: ID of a team category to filter on
+     * - siteid: ID of a contest site to filter on
      * - probid: ID of a problem to filter on
      * - langid: ID of a language to filter on
      * - judgehost: hostname of a judgehost to filter on
@@ -219,6 +220,12 @@ class SubmissionService
             $queryBuilder
                 ->innerJoin('t.category', 'cat')
                 ->andWhere('cat.visible = true');
+        }
+
+        if (isset($restrictions['siteid'])) {
+            $queryBuilder
+                ->andWhere('t.site = :siteid')
+                ->setParameter(':siteid', $restrictions['siteid']);
         }
 
         if (isset($restrictions['probid'])) {
