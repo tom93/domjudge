@@ -22,6 +22,11 @@ class Filter
     /**
      * @var int[]
      */
+    public $sites = [];
+
+    /**
+     * @var int[]
+     */
     public $teams = [];
 
     /**
@@ -29,17 +34,20 @@ class Filter
      * @param int[] $affiliations
      * @param string[] $countries
      * @param int[] $categories
+     * @param int[] $sites
      * @param int[] $teams
      */
     public function __construct(
         array $affiliations = [],
         array $countries = [],
         array $categories = [],
+        array $sites = [],
         array $teams = []
     ) {
         $this->affiliations = $affiliations;
         $this->countries    = $countries;
         $this->categories   = $categories;
+        $this->sites        = $sites;
         $this->teams        = $teams;
     }
 
@@ -117,6 +125,7 @@ class Filter
         if ($this->affiliations) $filteredOn[] = 'affiliations';
         if ($this->countries)    $filteredOn[] = 'countries';
         if ($this->categories)   $filteredOn[] = 'categories';
+        if ($this->sites)        $filteredOn[] = 'sites';
         if ($this->teams)        $filteredOn[] = 'teams';
 
         return implode(', ', $filteredOn);

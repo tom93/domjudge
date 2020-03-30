@@ -84,7 +84,8 @@
         {% if not static and
             (filterValues.affiliations | length > 1 or
              filterValues.countries | length > 1 or
-             filterValues.categories | length > 1) %}
+             filterValues.categories | length > 1 or
+             filterValues.sites | length > 1) %}
 	<div class="dropdown">
             <button class="btn btn-outline-secondary btn-sm m-2 dropdown-toggle" data-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false" id="filter-toggle">
@@ -120,6 +121,14 @@
                                 {% for categoryId, category in filterValues.categories %}
                                     <option {% if categoryId in scoreFilter.categories %}selected{% endif %}
                                             value="{{ categoryId }}">{{ category }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                        {% if filterValues.sites | length > 1 %}
+                            <select class="form-control mr-2" multiple size="8" name="sites[]">
+                                {% for siteId, site in filterValues.sites %}
+                                    <option {% if siteId in scoreFilter.sites %}selected{% endif %}
+                                            value="{{ siteId }}">{{ site }}</option>
                                 {% endfor %}
                             </select>
                         {% endif %}

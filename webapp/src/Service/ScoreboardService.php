@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Contest;
 use App\Entity\ContestProblem;
+use App\Entity\ContestSite;
 use App\Entity\ExternalJudgement;
 use App\Entity\Judging;
 use App\Entity\Problem;
@@ -126,7 +127,7 @@ class ScoreboardService
     {
         $freezeData = new FreezeData($contest);
 
-        $teams = $this->getTeams($contest, true, new Filter([], [], [], [$teamId]));
+        $teams = $this->getTeams($contest, true, new Filter([], [], [], [], [$teamId]));
         if (empty($teams)) {
             return null;
         }
@@ -632,7 +633,7 @@ class ScoreboardService
 
         if ($request->query->has('filter')) {
             $scoreFilter = [];
-            foreach (['affiliations', 'countries', 'categories'] as $type) {
+            foreach (['affiliations', 'countries', 'categories', 'sites'] as $type) {
                 if ($request->query->has($type)) {
                     $scoreFilter[$type] = $request->query->get($type);
                 }
@@ -651,6 +652,7 @@ class ScoreboardService
             $scoreFilter['affiliations'] ?? [],
             $scoreFilter['countries'] ?? [],
             $scoreFilter['categories'] ?? [],
+            $scoreFilter['sites'] ?? [],
             $scoreFilter['teams'] ?? []
         );
     }
@@ -726,6 +728,7 @@ class ScoreboardService
             'affiliations' => [],
             'countries'    => [],
             'categories'   => [],
+            'sites'        => [],
         ];
         $showFlags        = $this->dj->dbconfig_get('show_flags', true);
         $showAffiliations = $this->dj->dbconfig_get('show_affiliations', true);
@@ -741,6 +744,49 @@ class ScoreboardService
         $categories = $queryBuilder->getQuery()->getResult();
         foreach ($categories as $category) {
             $filters['categories'][$category->getCategoryid()] = $category->getName();
+        }
+
+        // show only contest sites with visible teams
+        if (empty($categories) || !$showAffiliations) {
+            $filters['sites'] = [];
+        } else {
+            $queryBuilder = $this->em->createQueryBuilder()
+                ->from(ContestSite::class, 's')
+                ->select('s')
+                ->join('s.teams', 't')
+                ->andWhere('t.category IN (:categories)')
+                ->setParameter(':categories', $categories);
+            if (!$contest->isOpenToAllTeams()) {
+                $queryBuilder
+                    ->leftJoin('t.contests', 'c')
+                    ->join('t.category', 'cat')
+                    ->leftJoin('cat.contests', 'cc')
+                    ->andWhere('c = :contest OR cc = :contest')
+                    ->setParameter('contest', $contest);
+                // avoid colon in parameter name that is set twice because of Doctrine ORM issue #8106
+            }
+            if (!$contest->isShowTeamsWithNoSubmissions()) {
+                $attemptedQuery = $this->em->createQueryBuilder()
+                    ->from(ScoreCache::class, 'sc')
+                    ->select('1')
+                    ->andWhere('sc.contest = :contest')
+                    ->andWhere('sc.team = t')
+                    ->andWhere('sc.submissions_public + sc.pending_public > 0');
+                $queryBuilder
+                    ->andWhere($queryBuilder->expr()->exists($attemptedQuery->getDql()))
+                    ->setParameter('contest', $contest);
+            }
+            $queryBuilder
+                ->groupBy('s.siteid')
+                ->orderBy('s.sortorder', 'ASC')
+                ->addOrderBy('s.name', 'ASC')
+                ->addOrderBy('s.siteid', 'ASC');
+
+            /** @var ContestSites[] $sites */
+            $sites = $queryBuilder->getQuery()->getResult();
+            foreach ($sites as $site) {
+                $filters['sites'][$site->getSiteid()] = $site->getName();
+            }
         }
 
         // show only affiliations / countries with visible teams
@@ -912,6 +958,12 @@ class ScoreboardService
                 $queryBuilder
                     ->andWhere('t.categoryid IN (:categories)')
                     ->setParameter(':categories', $filter->categories);
+            }
+
+            if ($filter->sites) {
+                $queryBuilder
+                    ->andWhere('t.siteid IN (:sites)')
+                    ->setParameter(':sites', $filter->sites);
             }
 
             if ($filter->countries) {

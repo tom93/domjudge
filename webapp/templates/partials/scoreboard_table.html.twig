@@ -206,10 +206,18 @@
                         {% endif %}
                         {{ score.team.name }}
                     </span>
-                    {% if showAffiliations %}
+                    {% if (showAffiliations and score.team.affiliation) or score.team.site %}
                         <span class="univ forceWidth">
-                            {% if score.team.affiliation %}
+                            {% set needComma = false %}
+                            {% if showAffiliations and score.team.affiliation %}
                                 {{ score.team.affiliation.name }}
+                                {%- set needComma = true %}
+                            {%- endif %}
+                            {%- if score.team.site %}
+                                {%- if needComma -%}
+                                    ,
+                                {% endif %}
+                                {{ score.team.site.name }} site
                             {% endif %}
                         </span>
                     {% endif %}
