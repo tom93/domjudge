@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Contest;
 use App\Entity\ContestProblem;
+use App\Entity\ContestSite;
 use App\Entity\ExternalJudgement;
 use App\Entity\Judging;
 use App\Entity\Problem;
@@ -112,7 +113,7 @@ class ScoreboardService
     {
         $freezeData = new FreezeData($contest);
 
-        $teams = $this->getTeams($contest, true, new Filter([], [], [], [$teamId]));
+        $teams = $this->getTeams($contest, true, new Filter([], [], [], [], [$teamId]));
         if (empty($teams)) {
             return null;
         }
@@ -722,7 +723,7 @@ class ScoreboardService
 
         if ($request->query->has('filter')) {
             $scoreFilter = [];
-            foreach (['affiliations', 'countries', 'categories'] as $type) {
+            foreach (['affiliations', 'countries', 'categories', 'sites'] as $type) {
                 if ($request->query->has($type)) {
                     $scoreFilter[$type] = $request->query->get($type);
                 }
@@ -739,6 +740,7 @@ class ScoreboardService
             $scoreFilter['affiliations'] ?? [],
             $scoreFilter['countries'] ?? [],
             $scoreFilter['categories'] ?? [],
+            $scoreFilter['sites'] ?? [],
             $scoreFilter['teams'] ?? []
         );
     }
@@ -806,6 +808,7 @@ class ScoreboardService
             'affiliations' => [],
             'countries'    => [],
             'categories'   => [],
+            'sites'        => [],
         ];
         $showFlags        = $this->config->get('show_flags');
         $showAffiliations = $this->config->get('show_affiliations');
@@ -821,6 +824,37 @@ class ScoreboardService
         $categories = $queryBuilder->getQuery()->getResult();
         foreach ($categories as $category) {
             $filters['categories'][$category->getCategoryid()] = $category->getName();
+        }
+
+        // Show only contest sites with visible teams.
+        if (empty($categories)) {
+            $filters['sites'] = [];
+        } else {
+            $queryBuilder = $this->em->createQueryBuilder()
+                ->from(ContestSite::class, 's')
+                ->select('s')
+                ->join('s.teams', 't')
+                ->andWhere('t.category IN (:categories)')
+                ->setParameter('categories', $categories);
+            if (!$contest->isOpenToAllTeams()) {
+                $queryBuilder
+                    ->leftJoin('t.contests', 'c')
+                    ->join('t.category', 'cat')
+                    ->leftJoin('cat.contests', 'cc')
+                    ->andWhere('c = :contest OR cc = :contest')
+                    ->setParameter('contest', $contest);
+            }
+            $queryBuilder
+                ->groupBy('s.siteid')
+                ->orderBy('s.sortorder', 'ASC')
+                ->addOrderBy('s.name', 'ASC')
+                ->addOrderBy('s.siteid', 'ASC');
+
+            /** @var ContestSite[] $sites */
+            $sites = $queryBuilder->getQuery()->getResult();
+            foreach ($sites as $site) {
+                $filters['sites'][$site->getSiteid()] = $site->getName();
+            }
         }
 
         // Show only affiliations / countries with visible teams.
@@ -960,6 +994,12 @@ class ScoreboardService
                 $queryBuilder
                     ->andWhere('t.category IN (:categories)')
                     ->setParameter('categories', $filter->categories);
+            }
+
+            if ($filter->sites) {
+                $queryBuilder
+                    ->andWhere('t.site IN (:sites)')
+                    ->setParameter(':sites', $filter->sites);
             }
 
             if ($filter->countries) {
