@@ -14,17 +14,22 @@ class Filter
     public array $categories = [];
 
     /** @var int[] */
+    public array $sites = [];
+
+    /** @var int[] */
     public array $teams = [];
 
     public function __construct(
         array $affiliations = [],
         array $countries = [],
         array $categories = [],
+        array $sites = [],
         array $teams = []
     ) {
         $this->affiliations = $affiliations;
         $this->countries    = $countries;
         $this->categories   = $categories;
+        $this->sites        = $sites;
         $this->teams        = $teams;
     }
 
@@ -42,6 +47,9 @@ class Filter
         }
         if ($this->categories) {
             $filteredOn[] = 'categories';
+        }
+        if ($this->sites) {
+            $filteredOn[] = 'sites';
         }
         if ($this->teams) {
             $filteredOn[] = 'teams';
