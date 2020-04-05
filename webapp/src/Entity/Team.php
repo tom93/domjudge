@@ -21,7 +21,8 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  *     options={"collation"="utf8mb4_unicode_ci", "charset"="utf8mb4"},
  *     indexes={
  *         @ORM\Index(name="affilid", columns={"affilid"}),
- *         @ORM\Index(name="categoryid", columns={"categoryid"})
+ *         @ORM\Index(name="categoryid", columns={"categoryid"}),
+ *         @ORM\Index(name="siteid", columns={"siteid"})
  *     },
  *     uniqueConstraints={
  *         @ORM\UniqueConstraint(name="externalid", columns={"externalid"}, options={"lengths": {190}}),
@@ -183,6 +184,13 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface,
      * @Serializer\Exclude()
      */
     private ?TeamCategory $category;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="ContestSite", inversedBy="teams")
+     * @ORM\JoinColumn(name="siteid", referencedColumnName="siteid", onDelete="CASCADE")
+     * @Serializer\Exclude()
+     */
+    private ?ContestSite $site;
 
     /**
      * @ORM\ManyToMany(targetEntity="Contest", mappedBy="teams")
@@ -480,6 +488,17 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface,
     public function getCategory(): ?TeamCategory
     {
         return $this->category;
+    }
+
+    public function setSite(?ContestSite $site = null): Team
+    {
+        $this->site = $site;
+        return $this;
+    }
+
+    public function getSite(): ?ContestSite
+    {
+        return $this->site;
     }
 
     /**
