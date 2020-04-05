@@ -2,6 +2,8 @@
 // based on TeamCategory.php
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -51,6 +53,17 @@ class ContestSite extends BaseApiEntity
      * @Serializer\Exclude()
      */
     private bool $active = true;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Team", mappedBy="site")
+     * @Serializer\Exclude()
+     */
+    private Collection $teams;
+
+    public function __construct()
+    {
+        $this->teams = new ArrayCollection();
+    }
 
     public function __toString(): string
     {
@@ -104,5 +117,10 @@ class ContestSite extends BaseApiEntity
     public function getActive(): bool
     {
         return $this->active;
+    }
+
+    public function getTeams(): Collection
+    {
+        return $this->teams;
     }
 }
