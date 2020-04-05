@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Controller\API\AbstractRestController as ARC;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use Stringable;
@@ -42,6 +44,18 @@ class ContestSite extends BaseApiEntity implements Stringable
     #[ORM\Column(options: ['comment' => 'Does this site accept new registrations?', 'default' => 1])]
     #[Serializer\Exclude]
     private bool $active = true;
+
+    /**
+     * @var Collection<int, Team>
+     */
+    #[ORM\OneToMany(mappedBy: 'site', targetEntity: Team::class)]
+    #[Serializer\Exclude]
+    private Collection $teams;
+
+    public function __construct()
+    {
+        $this->teams = new ArrayCollection();
+    }
 
     public function __toString(): string
     {
@@ -95,5 +109,13 @@ class ContestSite extends BaseApiEntity implements Stringable
     public function getActive(): bool
     {
         return $this->active;
+    }
+
+    /**
+     * @return Collection<int, Team>
+     */
+    public function getTeams(): Collection
+    {
+        return $this->teams;
     }
 }
