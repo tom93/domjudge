@@ -18,7 +18,8 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  *     options={"collate"="utf8mb4_unicode_ci", "charset"="utf8mb4"},
  *     indexes={
  *         @ORM\Index(name="affilid", columns={"affilid"}),
- *         @ORM\Index(name="categoryid", columns={"categoryid"})
+ *         @ORM\Index(name="categoryid", columns={"categoryid"}),
+ *         @ORM\Index(name="siteid", columns={"siteid"})
  *     },
  *     uniqueConstraints={
  *         @ORM\UniqueConstraint(name="externalid", columns={"externalid"}, options={"lengths": {"190"}}),
@@ -64,6 +65,13 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
      * @Serializer\Exclude()
      */
     private $categoryid = 0;
+
+    /**
+     * @var int
+     * @ORM\Column(type="integer", name="siteid", options={"comment"="Contest site ID","unsigned"="true","default"="NULL"}, nullable=true)
+     * @Serializer\Exclude()
+     */
+    private $siteid;
 
     /**
      * @var int
@@ -161,6 +169,13 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
      * @Serializer\Exclude()
      */
     private $category;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="ContestSite", inversedBy="teams")
+     * @ORM\JoinColumn(name="siteid", referencedColumnName="siteid", onDelete="CASCADE")
+     * @Serializer\Exclude()
+     */
+    private $site;
 
     /**
      * @ORM\ManyToMany(targetEntity="Contest", mappedBy="teams")
@@ -309,6 +324,30 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
     public function getCategoryid()
     {
         return $this->categoryid;
+    }
+
+    /**
+     * Set siteid
+     *
+     * @param integer $siteid
+     *
+     * @return Team
+     */
+    public function setSiteid($siteid)
+    {
+        $this->siteid = $siteid;
+
+        return $this;
+    }
+
+    /**
+     * Get siteid
+     *
+     * @return integer
+     */
+    public function getSiteid()
+    {
+        return $this->siteid;
     }
 
     /**
@@ -593,6 +632,30 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
     public function getCategory()
     {
         return $this->category;
+    }
+
+    /**
+     * Set site
+     *
+     * @param \App\Entity\ContestSite $site
+     *
+     * @return Team
+     */
+    public function setSite(\App\Entity\ContestSite $site = null)
+    {
+        $this->site = $site;
+
+        return $this;
+    }
+
+    /**
+     * Get site
+     *
+     * @return \App\Entity\ContestSite
+     */
+    public function getSite()
+    {
+        return $this->site;
     }
 
     /**
