@@ -80,7 +80,7 @@ The following environment variables are supported by the `domserver` container:
 * `MYSQL_PASSWORD` (defaults to `domjudge`): set the password to use for connecting to MySQL.
 * `MYSQL_ROOT_PASSWORD` (defaults to `domjudge`): set the root password to use for connecting to MySQL.
 * `MYSQL_DATABASE` (defaults to `domjudge`): set the database to use.
-* `DJ_DB_INSTALL_BARE` (defaults to `0`): set to `1` to do a `bare-install` for the database instead of a normal `install`.
+* `DJ_DB_INSTALL` (defaults to `install`): command to pass to `dj_setup_database`, set to `bare-install` to skip creation of example contest and users.
 * `FPM_MAX_CHILDREN` (defaults to `40`): the maximum number of PHP FPM children to spawn.
 * `TRUSTED_PROXIES` (defaults to empty): The IP list of trusted proxy servers, separated by a comma(`,`).
 * `WEBAPP_BASEURL` (defaults to `/`): The Base Url of DOMserver. Such as `/domjudge`, You can access the DOMserver homepage via `http://localhost/domjudge`.
