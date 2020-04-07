@@ -51,7 +51,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 	MYSQL_PASSWORD=domjudge \
 	MYSQL_ROOT_PASSWORD=domjudge \
 	FPM_MAX_CHILDREN=40 \
-	DJ_DB_INSTALL_BARE=0
+	DJ_DB_INSTALL=install
 
 # Set up user
 RUN useradd -m domjudge
