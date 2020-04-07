@@ -145,11 +145,7 @@ fi
 if ! bin/dj_setup_database -uroot -p${MYSQL_ROOT_PASSWORD} status > /dev/null 2>&1
 then
 	echo "  Database not installed; installing..."
-	INSTALL=install
-	if [ "${DJ_DB_INSTALL_BARE}" -eq "1" ]
-	then
-		INSTALL=bare-install
-	fi
+	INSTALL=${DJ_DB_INSTALL:-install}
 	echo "Using ${INSTALL}..."
 	bin/dj_setup_database -uroot -p${MYSQL_ROOT_PASSWORD} ${INSTALL}
 else
