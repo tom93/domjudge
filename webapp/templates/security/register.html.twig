@@ -31,9 +31,56 @@
                 return;
             }
 
-            var $affiliationNew = $('[data-id="user_registration_affiliation_new"]');
+            // identify the placeholder, preferred options, separator, and repetitions
+
+            var $options = $affiliation.find('option');
+            var preferredOptions = [];
+            var preferredOptionValues = [];
+            var separator = null;
+            var repetitionsStart = null;
+            var repetitionsEnd = null;
+            for (var i = 0; i < $options.length; i++) {
+                var option = $options[i];
+                var $option = $(option);
+                if (separator === null) {
+                    // before separator
+                    if (i === 0 && $option.attr("value") === "") {
+                        // placeholder
+                        $option.addClass("placeholder");
+                    } else if (!$option.attr("value") && $option.is(':disabled')) {
+                        // separator
+                        separator = option;
+                        repetitionsStart = i + 1;
+                        repetitionsEnd = i + 1;
+                    } else {
+                        // preferred option
+                        preferredOptions.push(option);
+                        preferredOptionValues.push($option.attr("value"));
+                    }
+                } else {
+                    // after separator
+                    if (preferredOptionValues.indexOf($option.attr("value")) !== -1) {
+                        // repetition of a preferred option
+                        repetitionsEnd = i + 1;
+                    } else {
+                        // assume there are no more repetitions
+                        break;
+                    }
+                }
+            }
+            if (separator === null) {
+                preferredOptions = [];
+            } else {
+                $(preferredOptions).addClass("preferred");
+                // remove repetitions of the preferred options
+                if (repetitionsEnd > repetitionsStart) {
+                    $options.slice(repetitionsStart, repetitionsEnd).remove();
+                }
+            }
 
             // only display the new affiliation name and country fields when "Add affiliation..." is selected
+
+            var $affiliationNew = $('[data-id="user_registration_affiliation_new"]');
 
             if ($affiliationNew.length) {
                 $affiliation.on('change', function () {
@@ -53,27 +100,6 @@
             }
 
             // during search, move the options "No affiliation" and "Add affiliation..." to the end
-
-            var $options = $affiliation.find('option');
-            var preferredOptions = [];
-            var separator = null;
-            for (var i = 0; i < $options.length; i++) {
-                var option = $options[i];
-                var $option = $(option);
-                if (i === 0 && $option.attr("value") === "") {
-                    $option.addClass("placeholder");
-                } else if (!$option.attr("value") && $option.is(':disabled')) {
-                    separator = option;
-                    break;
-                } else {
-                    preferredOptions.push(option);
-                }
-            }
-            if (separator === null) {
-                preferredOptions = [];
-            } else {
-                $(preferredOptions).addClass("preferred");
-            }
 
             function matcher(params, data) {
                 if (params.term) {
