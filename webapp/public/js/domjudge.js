@@ -448,7 +448,9 @@ function enableRefresh($url, $after, usingAjax) {
         return;
     }
     var refresh = function () {
-        if (usingAjax) {
+        if ($('#filter-toggle[aria-expanded="true"]').length !== 0) {
+            // don't refresh when the scoreboard filter popup is open
+        } else if (usingAjax) {
             $('.loading-indicator').addClass('ajax-loader');
             $.ajax({
                 url: $url
