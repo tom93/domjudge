@@ -46,6 +46,7 @@ class UserRegistrationType extends AbstractType
                 'attr' => [
                     'placeholder' => 'Username',
                     'autocomplete' => 'username',
+                    'title' => 'Used to log in to this contest website. Must be alphanumeric.',
                 ],
             ])
             ->add('name', TextType::class, [
@@ -69,6 +70,7 @@ class UserRegistrationType extends AbstractType
                 'label' => false,
                 'attr' => [
                     'placeholder' => 'Team name',
+                    'title' => 'Displayed on the scoreboard.',
                 ],
                 'constraints' => [
                     new NotBlank(),
