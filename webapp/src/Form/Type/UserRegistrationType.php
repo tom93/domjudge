@@ -73,6 +73,7 @@ class UserRegistrationType extends AbstractType
                 'label' => false,
                 'attr' => [
                     'placeholder' => 'Username',
+                    'title' => 'Used to log in to this contest website. Must be alphanumeric.',
                 ],
             ]);
         if ($this->config->get('show_user_emails')) {
@@ -91,6 +92,7 @@ class UserRegistrationType extends AbstractType
                 'label' => false,
                 'attr' => [
                     'placeholder' => 'Team name',
+                    'title' => 'Displayed on the scoreboard.',
                 ],
                 'constraints' => [
                     new NotBlank(),
