@@ -92,7 +92,7 @@ class UserRegistrationType extends AbstractType
                 'mapped' => false,
             ]);
 
-        if ($this->dj->dbconfig_get('show_affiliations', true)) {
+        if ($this->config->get('show_affiliations')) {
             $countries = [];
             foreach (Utils::ALPHA3_COUNTRIES as $alpha3 => $country) {
                 $countries["$country ($alpha3)"] = $alpha3;

@@ -84,7 +84,7 @@ class SecurityController extends AbstractController
         $response = new Response();
         $response->headers->set('X-Login-Page', $this->generateUrl('login'));
 
-        $registrationCategoryName = $this->dj->dbconfig_get('registration_category_name', '');
+        $registrationCategoryName = $this->config->get('registration_category_name');
         $registrationCategory     = $em->getRepository(TeamCategory::class)->findOneBy(['name' => $registrationCategoryName]);
 
         return $this->render('security/login.html.twig', array(
@@ -117,7 +117,7 @@ class SecurityController extends AbstractController
         }
 
         $em                       = $this->getDoctrine()->getManager();
-        $registrationCategoryName = $this->dj->dbconfig_get('registration_category_name', '');
+        $registrationCategoryName = $this->config->get('registration_category_name');
         $registrationCategory     = $em->getRepository(TeamCategory::class)->findOneBy(['name' => $registrationCategoryName]);
 
         if ($registrationCategory === null) {
