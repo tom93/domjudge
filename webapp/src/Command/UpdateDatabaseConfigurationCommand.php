@@ -119,7 +119,16 @@ class UpdateDatabaseConfigurationCommand extends Command
                     }
                     $currentValue = $option->getType() === 'bool' ? (bool)$option->getValue() : $option->getValue();
                     if ($currentValue !== $item['default_value']) {
-                        $this->logger->info("Configuration option '%s': value in database is %s, default value db-config.yaml is %s", [$item['name'], OutputFormatter::escape($this->dj->jsonEncode($currentValue)), OutputFormatter::escape($this->dj->jsonEncode($item['default_value']))]);
+                        if ($option->getName() === 'script_filesize_limit' && $currentValue === 540672) {
+                            // default changed in commit 053f592d7f4a51027bf8f85af4dfe9a6510aa5ba
+                            $this->logger->info("Configuration option '%s': bumping from old default (%s) to new default (%s)", [$item['name'], OutputFormatter::escape($this->dj->jsonEncode($currentValue)), OutputFormatter::escape($this->dj->jsonEncode($item['default_value']))]);
+                            if (!$input->getOption('dry-run')) {
+                                $option->setValue($item['default_value']);
+                                $this->em->flush();
+                            }
+                        } else {
+                            $this->logger->info("Configuration option '%s': value in database is %s, default value db-config.yaml is %s", [$item['name'], OutputFormatter::escape($this->dj->jsonEncode($currentValue)), OutputFormatter::escape($this->dj->jsonEncode($item['default_value']))]);
+                        }
                     }
                     if ($option->getPublic() !== $item['public']) {
                         $this->logger->warning("Configuration option '%s': %s in database but %s in db-config.yaml", [$item['name'], $option->getPublic() ? "public" : "not public", $item['public'] ? "public" : "not public"]);
