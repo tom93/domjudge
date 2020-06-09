@@ -285,6 +285,7 @@ bare-install|install)
 	create_db_users
 	export DB_FIRST_INSTALL=1
 	symfony_console doctrine:migrations:migrate -n
+	DBUSER=$domjudge_DBUSER PASSWD=$domjudge_PASSWD symfony_console -vv domjudge:db-config:update
 	unset DB_FIRST_INSTALL
 	if [ "$1" = "install" ]; then
 		DBUSER=$domjudge_DBUSER PASSWD=$domjudge_PASSWD symfony_console domjudge:load-example-data
@@ -304,6 +305,7 @@ upgrade)
 	fi
 	read_dbpasswords
 	symfony_console doctrine:migrations:migrate -n
+	DBUSER=$domjudge_DBUSER PASSWD=$domjudge_PASSWD symfony_console -vv domjudge:db-config:update
 	verbose "DOMjudge database upgrade completed."
 	rm -f $TMPOUT
 	;;
