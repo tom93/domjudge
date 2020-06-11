@@ -7,56 +7,56 @@ class ScoreboardMatrixItem
     /**
      * @var bool
      */
-    protected $isCorrect;
+    public $isCorrect;
 
     /**
      * @var bool
      */
-    protected $isFirst;
+    public $isFirst;
 
     /**
      * @var int
      */
-    protected $numberOfSubmissions;
+    public $numSubmissions;
 
     /**
      * @var int
      */
-    protected $numberOfPendingSubmissions;
+    public $numSubmissionsPending;
 
     /**
      * @var float|string
      */
-    protected $time;
+    public $time;
 
     /**
      * @var int
      */
-    protected $penaltyTime;
+    public $penaltyTime;
 
     /**
      * ScoreboardMatrixItem constructor.
      * @param bool $isCorrect
      * @param bool $isFirst
-     * @param int $numberOfSubmissions
-     * @param int $numberOfPendingSubmissions
+     * @param int $numSubmissions
+     * @param int $numSubmissionsPending
      * @param float|string $time
      * @param int $penaltyTime
      */
     public function __construct(
         bool $isCorrect,
         bool $isFirst,
-        int $numberOfSubmissions,
-        int $numberOfPendingSubmissions,
+        int $numSubmissions,
+        int $numSubmissionsPending,
         $time,
         int $penaltyTime
     ) {
-        $this->isCorrect                  = $isCorrect;
-        $this->isFirst                    = $isFirst;
-        $this->numberOfSubmissions        = $numberOfSubmissions;
-        $this->numberOfPendingSubmissions = $numberOfPendingSubmissions;
-        $this->time                       = $time;
-        $this->penaltyTime                = $penaltyTime;
+        $this->isCorrect             = $isCorrect;
+        $this->isFirst               = $isFirst;
+        $this->numSubmissions        = $numSubmissions;
+        $this->numSubmissionsPending = $numSubmissionsPending;
+        $this->time                  = $time;
+        $this->penaltyTime           = $penaltyTime;
     }
 
     /**
@@ -80,7 +80,7 @@ class ScoreboardMatrixItem
      */
     public function getNumberOfSubmissions(): int
     {
-        return $this->numberOfSubmissions;
+        return $this->numSubmissions;
     }
 
     /**
@@ -88,7 +88,7 @@ class ScoreboardMatrixItem
      */
     public function getNumberOfPendingSubmissions(): int
     {
-        return $this->numberOfPendingSubmissions;
+        return $this->numSubmissionsPending;
     }
 
     /**
