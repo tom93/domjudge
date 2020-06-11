@@ -219,7 +219,7 @@ class UserRegistrationType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $validateAffiliation = function ($data, ExecutionContext $context) {
-            if ($this->dj->dbconfig_get('show_affiliations', true)) {
+            if ($this->config->get('show_affiliations')) {
                 /** @var Form $form */
                 $form = $context->getRoot();
                 switch ($form->get('affiliation')->getData()) {
