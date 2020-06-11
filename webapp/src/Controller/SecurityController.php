@@ -152,7 +152,7 @@ class SecurityController extends AbstractController
                 ->setCategory($teamCategory)
                 ->setComments('Registered by ' . $this->dj->getClientIp() . ' on ' . date('r'));
 
-            if ($this->dj->dbconfig_get('show_affiliations', true)) {
+            if ($this->config->get('show_affiliations')) {
                 switch ($registration_form->get('affiliation')->getData()) {
                     case 'new':
                         $affiliation = new TeamAffiliation();
