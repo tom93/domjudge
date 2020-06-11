@@ -9,27 +9,27 @@ class TeamScore
     /**
      * @var Team
      */
-    protected $team;
+    public $team;
 
     /**
      * @var int
      */
-    protected $numberOfPoints = 0;
+    public $numPoints = 0;
 
     /**
      * @var float[]
      */
-    protected $solveTimes = [];
+    public $solveTimes = [];
 
     /**
      * @var int
      */
-    protected $rank = 0;
+    public $rank = 0;
 
     /**
      * @var int
      */
-    protected $totalTime;
+    public $totalTime;
 
     /**
      * TeamScore constructor.
@@ -54,7 +54,7 @@ class TeamScore
      */
     public function getNumberOfPoints(): int
     {
-        return $this->numberOfPoints;
+        return $this->numPoints;
     }
 
     /**
@@ -62,7 +62,7 @@ class TeamScore
      */
     public function addNumberOfPoints(int $numberOfPoints)
     {
-        $this->numberOfPoints += $numberOfPoints;
+        $this->numPoints += $numberOfPoints;
     }
 
     /**
