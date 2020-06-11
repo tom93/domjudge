@@ -97,8 +97,8 @@ class ScoreboardController extends BaseController
     public function teamAction(Request $request, int $teamId)
     {
         $team             = $this->em->getRepository(Team::class)->find($teamId);
-        $showFlags        = (bool)$this->dj->dbconfig_get('show_flags', true);
-        $showAffiliations = (bool)$this->dj->dbconfig_get('show_affiliations', true);
+        $showFlags        = (bool)$this->config->get('show_flags');
+        $showAffiliations = (bool)$this->config->get('show_affiliations');
         $data             = [
             'team' => $team,
             'showFlags' => $showFlags,
