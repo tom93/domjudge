@@ -234,6 +234,18 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
         return $this->externalid;
     }
 
+    // forward compatibility: externalid was renamed to icpcid in commit 0356a04691d230c92737f1894d23e21572b9250f
+
+    public function setIcpcid($icpcid)
+    {
+        return $this->setExternalid($icpcid);
+    }
+
+    public function getIcpcid()
+    {
+        return $this->getExternalid();
+    }
+
     /**
      * Set name
      *
