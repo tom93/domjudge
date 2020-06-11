@@ -55,6 +55,7 @@ class ConfigurationService
      * @var array
      */
     protected $defaults = [
+        'show_team_members' => true,
     ];
 
     /**
