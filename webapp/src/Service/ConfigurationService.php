@@ -56,6 +56,7 @@ class ConfigurationService
      */
     protected $defaults = [
         'show_team_members' => true,
+        'show_teams_with_no_submissions' => true,
     ];
 
     /**
