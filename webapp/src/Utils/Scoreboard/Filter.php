@@ -7,22 +7,22 @@ class Filter
     /**
      * @var int[]
      */
-    protected $affiliations = [];
+    public $affiliations = [];
 
     /**
      * @var string[]
      */
-    protected $countries = [];
+    public $countries = [];
 
     /**
      * @var int[]
      */
-    protected $categories = [];
+    public $categories = [];
 
     /**
      * @var int[]
      */
-    protected $teams = [];
+    public $teams = [];
 
     /**
      * Filter constructor.
@@ -114,22 +114,10 @@ class Filter
     public function getFilteredOn(): string
     {
         $filteredOn = [];
-        if ($this->affiliations) {
-            $filteredOn[] = 'affiliations';
-        }
-        if ($this->countries) {
-            $filteredOn[] = 'countries';
-        }
-        if ($this->categories) {
-            $filteredOn[] = 'categories';
-        }
-        if ($this->teams) {
-            $filteredOn[] = 'teams';
-        }
-
-        if (empty($filteredOn)) {
-            return '';
-        }
+        if ($this->affiliations) $filteredOn[] = 'affiliations';
+        if ($this->countries)    $filteredOn[] = 'countries';
+        if ($this->categories)   $filteredOn[] = 'categories';
+        if ($this->teams)        $filteredOn[] = 'teams';
 
         return implode(', ', $filteredOn);
     }
