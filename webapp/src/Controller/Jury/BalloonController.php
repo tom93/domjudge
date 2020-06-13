@@ -5,6 +5,7 @@ namespace App\Controller\Jury;
 use App\Entity\Balloon;
 use App\Entity\ScoreCache;
 use App\Entity\TeamAffiliation;
+use App\Service\ConfigurationService;
 use App\Service\DOMJudgeService;
 use App\Service\EventLogService;
 use App\Utils\Utils;
