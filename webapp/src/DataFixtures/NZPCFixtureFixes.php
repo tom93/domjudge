@@ -49,7 +49,7 @@ class NZPCFixtureFixes extends Fixture
         // categories created by the fixtures.
 
         // update example team
-        $team = $manager->getRepository(Team::class)->findOneBy(['icpcid' => 'exteam']);
+        $team = $manager->getRepository(Team::class)->findOneBy(['externalid' => 'exteam']);
         if (!$team) {
             $this->logger->warning('Cannot find example team "exteam"');
         } else {
