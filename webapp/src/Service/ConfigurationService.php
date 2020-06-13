@@ -60,6 +60,7 @@ class ConfigurationService
         'show_new_affiliation_option' => true,
         'show_user_emails' => true,
         'show_team_managers' => false,
+        'show_team_manager_emails' => false,
     ];
 
     /**
