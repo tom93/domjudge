@@ -59,6 +59,7 @@ class ConfigurationService
         'show_teams_with_no_submissions' => true,
         'show_new_affiliation_option' => true,
         'show_user_emails' => true,
+        'show_team_managers' => false,
     ];
 
     /**
