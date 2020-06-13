@@ -205,6 +205,26 @@ EOF
      */
     protected function doConfigure(string $name, $value)
     {
+        if (true) {
+            // backport: on DOMjudge < 7.3, there is no db-config.yaml and all the configuration data is stored in the database
+            /** @var Configuration $option */
+            $option = $this->em->getRepository(Configuration::class)->findOneBy(['name' => $name]);
+            if (!$option) {
+                // don't try to create options that don't exist because it's too complicated (use `webapp/bin/console domjudge:db-config:update`)
+                $this->logger->warning("Configuration option '%s' does not exist", [$name]);
+            } else {
+                $current = $this->config->get($name);
+                if ($current === $value || (is_bool($value) && $current === (int)$value)) {
+                    $this->logger->debug("Configuration option '%s' is already set to %s", [$name, OutputFormatter::escape($this->dj->jsonEncode($value))]);
+                } else {
+                    // it's not possible to detect if the option has been set by the user, so always overwrite
+                    $this->logger->info("Setting configuration option '%s' to %s (was %s)", [$name, OutputFormatter::escape($this->dj->jsonEncode($value)), OutputFormatter::escape($this->dj->jsonEncode($current))]);
+                    $option->setValue($value);
+                    $this->em->flush();
+                }
+            }
+            return;
+        }
         $current = $this->config->get($name);
         if ($current === $value || (is_bool($value) && $current === (int)$value)) {
             $this->logger->debug("Configuration option '%s' is already set to %s", [$name, OutputFormatter::escape($this->dj->jsonEncode($value))]);
