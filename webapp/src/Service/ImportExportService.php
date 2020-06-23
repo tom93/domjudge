@@ -785,9 +785,6 @@ class ImportExportService
             }
             $affiliationExternalid = preg_replace('/^INST-(U-)?/', '', @$line[7]);
             if (empty($affiliationExternalid)) {
-                // TODO: note that when we set this external ID to NULL, we *will* add team affiliations
-                // multiple times, as the App\Entity\TeamAffiliation query below will not find an affiliation.
-                // We might want to change that to also search on shortname and/or name?
                 $affiliationExternalid = null;
             }
 
@@ -872,12 +869,13 @@ class ImportExportService
             $teamCategory    = null;
             if (!empty($teamItem['team_affiliation']['shortname'])) {
                 // First look up if the affiliation already exists.
+                $key = isset($teamItem['team_affiliation']['externalid']) ? 'externalid' : 'shortname';
                 /** @var TeamAffiliation $teamAffiliation */
                 $teamAffiliation = $this->em->createQueryBuilder()
                     ->from(TeamAffiliation::class, 'a')
                     ->select('a')
-                    ->andWhere('a.externalid = :externalid')
-                    ->setParameter(':externalid', $teamItem['team_affiliation']['externalid'])
+                    ->andWhere('a.' . $key . ' = :' . $key)
+                    ->setParameter(':' . $key, $teamItem['team_affiliation'][$key])
                     ->getQuery()
                     ->getOneOrNullResult();
                 if ($teamAffiliation === null) {
