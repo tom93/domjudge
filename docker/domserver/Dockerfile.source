@@ -1,4 +1,21 @@
-FROM debian:bookworm-slim AS domserver-build
+# This Dockerfile builds the domserver image from source.
+#
+# It is based on domserver/Dockerfile, but builds from a directory with the
+# source code instead of a release tarball.
+#
+# The build context should be the root directory of the project, unlike the
+# other Dockerfiles which expect the build context to be the "docker"
+# directory.
+#
+# This Dockerfile can also be used to create a release tarball (without
+# building the domserver image) as follows:
+#
+# tar c --exclude=./.git --exclude=./docker/domjudge.tar.gz . |
+#   docker build --target=dist -t domjudge/dist:<VERSION> -f docker/domserver/Dockerfile.source -
+# docker run --rm domjudge/dist:<VERSION> tar cz -C /domjudge-src domjudge > docker/domjudge.tar.gz
+# docker rmi domjudge/dist:<VERSION>
+
+FROM debian:bookworm-slim AS domserver-build-part-1
 LABEL org.opencontainers.image.authors="DOMjudge team <team@domjudge.org>"
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -30,13 +47,22 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 	&& php composer-setup.php \
 	&& mv /composer.phar /usr/local/bin/composer
 
-# Add DOMjudge source code with correct ownership
-RUN mkdir /domjudge-src && chown domjudge: /domjudge-src
-COPY domjudge.tar.gz /domjudge-src/domjudge.tar.gz
-RUN cd /domjudge-src && su domjudge -c 'tar xzf domjudge.tar.gz' && rm domjudge.tar.gz
+# Install PHP dependencies
+# (also done by "make dist", but we do it here *before* adding the rest of the source to leverage the build cache)
+COPY --chown=domjudge composer.json composer.lock symfony.lock /domjudge-src/domjudge/
+RUN cd /domjudge-src/domjudge && su domjudge -c 'composer install --prefer-dist -o --no-scripts'
+
+# Add DOMjudge source code
+COPY --chown=domjudge . /domjudge-src/domjudge
+
+# If we are creating a release tarball (`docker build --target=dist`), run `make dist` and finish.
+FROM domserver-build-part-1 AS dist
+RUN cd /domjudge-src/domjudge && su domjudge -c '. /venv/bin/activate && make dist'
+# Otherwise, continue normally (docker/domserver/build.sh will run `make dist`).
+FROM domserver-build-part-1 AS domserver-build
 
 # Build and install domserver
-COPY domserver/build.sh /domjudge-src/build.sh
+COPY docker/domserver/build.sh /domjudge-src/build.sh
 RUN /domjudge-src/build.sh
 
 # Now create an image with the actual build in it
@@ -77,14 +103,14 @@ COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
 COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
 
 # Copy scripts
-COPY domserver/scripts /scripts/
-COPY domserver/supervisor /etc/supervisor/conf.d/
+COPY docker/domserver/scripts /scripts/
+COPY docker/domserver/supervisor /etc/supervisor/conf.d/
 
 # Make the scripts available to the root user
 ENV PATH="$PATH:/opt/domjudge/domserver/bin"
 
 # Run customizations
-COPY domserver/configure.sh /configure.sh
+COPY docker/domserver/configure.sh /configure.sh
 RUN chmod 700 /configure.sh && /configure.sh && rm -f /configure.sh
 
 # Expose HTTP port
