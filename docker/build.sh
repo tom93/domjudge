@@ -47,6 +47,7 @@ URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
 FILE=domjudge.tar.gz
 section_end
 
+if false; then
 section_start "Download DOMjudge tarball"
 echo "[..] Downloading DOMjudge version ${VERSION}..."
 if ! wget --quiet "${URL}" -O ${FILE}
@@ -56,6 +57,14 @@ then
 fi
 echo "[ok] DOMjudge version ${VERSION} downloaded as domjudge.tar.gz"; echo
 section_end
+fi
+
+echo "[..] Boostrapping..."
+tar c -C .. --exclude=./.git --exclude="./docker/*.tar.gz" . |
+	docker build --target=dist -t "${NAMESPACE}/dist:${VERSION}" -f docker/domserver/Dockerfile.source -
+docker run --rm "${NAMESPACE}/dist:${VERSION}" tar cz -C /domjudge-src domjudge > domjudge.tar.gz
+docker rmi --no-prune "${NAMESPACE}/dist:${VERSION}"
+echo "[ok] Done boostrapping"
 
 section_start "Build domserver container"
 echo "[..] Building Docker image for domserver..."
