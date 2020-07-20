@@ -15,6 +15,7 @@ fi
 
 VERSION="$1"
 
+if false; then
 URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
 FILE=domjudge.tar.gz
 
@@ -27,6 +28,14 @@ then
 fi
 
 echo "[ok] DOMjudge version ${VERSION} downloaded as domjudge.tar.gz"; echo
+fi
+
+echo "[..] Boostrapping..."
+tar c -C .. --exclude=./.git --exclude="./docker/*.tar.gz" . |
+	docker build --target=dist -t domjudge/dist:${VERSION} -f docker/domserver/Dockerfile.source -
+docker run --rm domjudge/dist:${VERSION} tar cz -C /domjudge-src domjudge > domjudge.tar.gz
+docker rmi --no-prune domjudge/dist:${VERSION}
+echo "[ok] Done boostrapping"
 
 echo "[..] Building Docker image for domserver..."
 ./build-domjudge.sh "domjudge/domserver:${VERSION}"
