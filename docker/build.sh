@@ -47,7 +47,7 @@ URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
 FILE=domjudge.tar.gz
 section_end
 
-if false; then
+if [ "${BUILD_DOWNLOAD_RELEASE-0}" != 0 ]; then
 section_start "Download DOMjudge tarball"
 echo "[..] Downloading DOMjudge version ${VERSION}..."
 if ! wget --quiet "${URL}" -O ${FILE}
@@ -59,31 +59,40 @@ echo "[ok] DOMjudge version ${VERSION} downloaded as domjudge.tar.gz"; echo
 section_end
 fi
 
+if [ "${BUILD_FROM_SOURCE-1}" != 0 ]; then
 echo "[..] Boostrapping..."
 tar c -C .. --exclude=./.git --exclude="./docker/*.tar.gz" . |
 	docker build --target=dist -t "${NAMESPACE}/dist:${VERSION}" -f docker/domserver/Dockerfile.source -
 docker run --rm "${NAMESPACE}/dist:${VERSION}" tar cz -C /domjudge-src domjudge > domjudge.tar.gz
 docker rmi --no-prune "${NAMESPACE}/dist:${VERSION}"
 echo "[ok] Done boostrapping"
+fi
 
+if [ "${BUILD_DOMSERVER-1}" != 0 ]; then
 section_start "Build domserver container"
 echo "[..] Building Docker image for domserver..."
 ./build-domjudge.sh "${NAMESPACE}/domserver:${VERSION}"
 echo "[ok] Done building Docker image for domserver"
 section_end
+fi
 
+if [ "${BUILD_JUDGEHOST-1}" != 0 ]; then
 section_start "Build judgehost container (with intermediate image)"
 echo "[..] Building Docker image for judgehost using intermediate build image..."
 ./build-judgehost.sh "${NAMESPACE}/judgehost:${VERSION}"
 echo "[ok] Done building Docker image for judgehost"
 section_end
+fi
 
+if [ "${BUILD_DEFAULT_JUDGEHOST_CHROOT-0}" != 0 ]; then
 section_start "Build judgehost container (judging chroot)"
 echo "[..] Building Docker image for judgehost chroot..."
 docker build -t "${NAMESPACE}/default-judgehost-chroot:${VERSION}" -f judgehost/Dockerfile.chroot .
 echo "[ok] Done building Docker image for judgehost chroot"
 section_end
+fi
 
+if [ "${BUILD_PRINT_HELP-0}" != 0 ]; then
 section_start "Push instructions"
 echo "All done. Image ${NAMESPACE}/domserver:${VERSION} and ${NAMESPACE}/judgehost:${VERSION} created"
 echo "If you are a DOMjudge maintainer with access to the domjudge organization on Docker Hub, you can now run the following command to push them to Docker Hub:"
@@ -94,3 +103,4 @@ docker tag ${NAMESPACE}/judgehost:${VERSION} ${NAMESPACE}/judgehost:latest && \
 docker tag ${NAMESPACE}/default-judgehost-chroot:${VERSION} ${NAMESPACE}/default-judgehost-chroot:latest && \
 docker push ${NAMESPACE}/domserver:latest && docker push ${NAMESPACE}/judgehost:latest && docker push ${NAMESPACE}/default-judgehost-chroot:latest"
 section_end
+fi
