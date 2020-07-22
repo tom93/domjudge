@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # Add packages with -i "<apt package name>" here
 /opt/domjudge/judgehost/bin/dj_make_chroot
