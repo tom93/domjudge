@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 /opt/domjudge/judgehost/bin/dj_make_chroot
 
 cd /
