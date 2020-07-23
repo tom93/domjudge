@@ -23,11 +23,13 @@ ADD https://getcomposer.org/installer composer-setup.php
 RUN php composer-setup.php \
     && mv /composer.phar /usr/local/bin/composer
 
-# Add DOMjudge source code and build script
+# Add DOMjudge source code
 ADD domjudge.tar.gz /domjudge-src
-ADD judgehost/build.sh /domjudge-src
+RUN find /domjudge-src/domjudge* '(' ! -user domjudge -o ! -group domjudge ')' -execdir \
+	chown domjudge:domjudge {} +
 
 # Build and install judgehost
+ADD judgehost/build.sh /domjudge-src
 RUN /domjudge-src/build.sh
 
 # We need to mount proc, which is not possible in "docker build". Thus we need to run this when starting the container

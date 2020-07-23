@@ -31,11 +31,13 @@ ADD https://getcomposer.org/installer composer-setup.php
 RUN php composer-setup.php \
     && mv /composer.phar /usr/local/bin/composer
 
-# Add DOMjudge source code and build script
+# Add DOMjudge source code
 ADD domjudge.tar.gz /domjudge-src
-ADD domserver/build.sh /domjudge-src
+RUN find /domjudge-src/domjudge* '(' ! -user domjudge -o ! -group domjudge ')' -execdir \
+	chown domjudge:domjudge {} +
 
 # Build and install domserver
+ADD domserver/build.sh /domjudge-src
 RUN /domjudge-src/build.sh
 
 # Now create an image with the actual build in it
@@ -62,20 +64,22 @@ RUN apt-get update \
 	enscript lpr \
 	&& rm -rf /var/lib/apt/lists/*
 
+# Set up user
+RUN useradd -m domjudge
+
 # Install composer
 ADD https://getcomposer.org/installer composer-setup.php
 RUN php composer-setup.php \
     && mv /composer.phar /usr/local/bin/composer
 
 # Copy domserver directory and add script files
-COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
-COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
+RUN mkdir /opt/domjudge && chown domjudge: /opt/domjudge
+COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjudge/domserver
+COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
 COPY ["domserver/scripts", "/scripts/"]
 
-# Add user, create PHP FPM socket dir, change permissions for domjudge directory and fix scripts
-RUN useradd -m domjudge \
-	&& mkdir -p /run/php \
-	&& chown -R domjudge: /opt/domjudge \
+# Create PHP FPM socket dir, change permissions for some domjudge directories and fix scripts
+RUN mkdir -p /run/php \
 	&& chown -R www-data: /opt/domjudge/domserver/tmp \
 	# for DOMjudge <= 7.2 (submitdir was removed in commit DOMjudge/domjudge@d66725038)
 	&& if [ -d /opt/domjudge/domserver/submissions ]; then chown -R www-data: /opt/domjudge/domserver/submissions; fi \

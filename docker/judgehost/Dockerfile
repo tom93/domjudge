@@ -19,6 +19,9 @@ RUN apt-get update \
 	gcc g++ default-jre-headless default-jdk-headless ghc fp-compiler \
 	&& rm -rf /var/lib/apt/lists/*
 
+# Set up user
+RUN useradd -m domjudge
+
 # Add chroot and judgehost data
 ADD chroot.tar.gz /
 ADD judgehost.tar.gz /
@@ -27,8 +30,6 @@ RUN cp /opt/domjudge/judgehost/etc/sudoers-domjudge /etc/sudoers.d/
 # Add scripts
 COPY ["judgehost/scripts", "/scripts/"]
 
-# Change start script permissions, add user and fix permissions
-RUN chmod +x /scripts/start.sh \
-	&& useradd -m domjudge \
-	&& chown -R domjudge: /opt/domjudge
+# Change start script permissions
+RUN chmod +x /scripts/start.sh
 CMD ["/scripts/start.sh"]
