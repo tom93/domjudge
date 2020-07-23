@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 cd /domjudge-src/domjudge*
-# ("chown -R domjudge: ." not required; verify using "chown --changes ...")
+chown -R domjudge: .
 sudo -u domjudge ./configure -with-baseurl=http://localhost/
 
 # Passwords should not be included in the built image. We create empty files here to prevent passwords from being generated.
