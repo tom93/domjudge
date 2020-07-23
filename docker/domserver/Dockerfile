@@ -32,11 +32,8 @@ RUN php composer-setup.php \
     && mv /composer.phar /usr/local/bin/composer
 
 # Add DOMjudge source code and build script
-COPY . /domjudge-src/domjudge
-ADD docker/domserver/build.sh /domjudge-src
-
-# Bootstrap the configure/build system
-RUN make -C /domjudge-src/domjudge dist
+ADD domjudge.tar.gz /domjudge-src
+ADD domserver/build.sh /domjudge-src
 
 # Build and install domserver
 RUN /domjudge-src/build.sh
@@ -73,7 +70,7 @@ RUN php composer-setup.php \
 # Copy domserver directory and add script files
 COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
 COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
-COPY ["docker/domserver/scripts", "/scripts/"]
+COPY ["domserver/scripts", "/scripts/"]
 
 # Add user, create PHP FPM socket dir, change permissions for domjudge directory and fix scripts
 RUN useradd -m domjudge \
@@ -88,7 +85,7 @@ RUN useradd -m domjudge \
 CMD ["/scripts/start.sh"]
 
 # Copy supervisor files
-COPY ["docker/domserver/supervisor", "/etc/supervisor/conf.d/"]
+COPY ["domserver/supervisor", "/etc/supervisor/conf.d/"]
 
 # Expose HTTP port
 EXPOSE 80
