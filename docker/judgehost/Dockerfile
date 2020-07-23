@@ -20,6 +20,9 @@ RUN apt-get update \
 	gcc g++ default-jre-headless default-jdk-headless ghc fp-compiler \
 	&& rm -rf /var/lib/apt/lists/*
 
+# Set up user
+RUN useradd -m domjudge
+
 # Add chroot and judgehost data
 ADD chroot.tar.gz /
 ADD judgehost.tar.gz /

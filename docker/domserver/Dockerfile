@@ -30,11 +30,13 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 	&& php composer-setup.php \
 	&& mv /composer.phar /usr/local/bin/composer
 
-# Add DOMjudge source code and build script
+# Add DOMjudge source code
 ADD domjudge.tar.gz /domjudge-src
-COPY domserver/build.sh /domjudge-src/build.sh
+RUN find /domjudge-src/domjudge* '(' ! -user domjudge -o ! -group domjudge ')' -execdir \
+	chown domjudge:domjudge {} +
 
 # Build and install domserver
+COPY domserver/build.sh /domjudge-src/build.sh
 RUN /domjudge-src/build.sh
 
 # Now create an image with the actual build in it
@@ -62,14 +64,18 @@ RUN apt-get update \
 	ca-certificates python3-yaml \
 	&& rm -rf /var/lib/apt/lists/*
 
+# Set up user
+RUN useradd -m domjudge
+
 # Install composer
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 	&& php composer-setup.php \
 	&& mv /composer.phar /usr/local/bin/composer
 
 # Copy domserver
-COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
-COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
+RUN mkdir /opt/domjudge && chown domjudge: /opt/domjudge
+COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjudge/domserver
+COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
 
 # Copy scripts
 COPY domserver/scripts /scripts/
