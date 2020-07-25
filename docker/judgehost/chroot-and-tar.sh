@@ -2,5 +2,5 @@
 /opt/domjudge/judgehost/bin/dj_make_chroot
 
 cd /
-tar -czvpf /chroot.tar.gz /chroot
-tar -czvpf /judgehost.tar.gz /opt/domjudge/judgehost
+tar -czpf /chroot.tar.gz /chroot
+tar -czpf /judgehost.tar.gz /opt/domjudge/judgehost
