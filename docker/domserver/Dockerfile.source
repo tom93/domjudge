@@ -51,7 +51,7 @@ RUN php composer-setup.php \
 # Install PHP dependencies
 # (also done by "make ... dist" below, but we do it here *before* adding the rest of the source to leverage the build cache)
 COPY --chown=domjudge composer.json composer.lock /domjudge-src/domjudge/
-RUN cd /domjudge-src/domjudge && sudo -u domjudge composer install --prefer-dist -o --no-scripts
+RUN cd /domjudge-src/domjudge && sudo -u domjudge composer install --prefer-dist -o --no-scripts 2>&1
 
 # Add DOMjudge source code
 COPY --chown=domjudge . /domjudge-src/domjudge
