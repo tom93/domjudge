@@ -157,7 +157,7 @@ INCLUDEDEBS="software-properties-common"
 
 # Packages to install after upgrade (space separated):
 INSTALLDEBS="default-jre-headless pypy python3 locales"
-# For C# support add: mono-mcs mono-devel
+# For C# support add: mono-runtime
 # However running mono within chroot still gives errors...
 
 # Packages to remove after upgrade (space separated):
