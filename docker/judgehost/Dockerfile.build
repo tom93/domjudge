@@ -19,11 +19,14 @@ RUN apt-get update \
 	ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Add DOMjudge source code and build script
-ADD domjudge.tar.gz /domjudge-src
-ADD judgehost/build.sh /domjudge-src
+# Add DOMjudge source code with correct ownership
+# TODO: Once BuildKit v0.23.0 is widely available this may be simplified, see docker/domserver/Dockerfile.
+RUN mkdir /domjudge-src && chown domjudge: /domjudge-src
+COPY domjudge.tar.gz /domjudge-src/domjudge.tar.gz
+RUN cd /domjudge-src && su domjudge -c 'tar xzf domjudge.tar.gz' && rm domjudge.tar.gz
 
 # Build and install judgehost
+COPY judgehost/build.sh /domjudge-src/build.sh
 RUN /domjudge-src/build.sh
 
 # We need to mount proc, which is not possible in "docker build". Thus we need to run this when starting the container

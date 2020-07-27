@@ -20,11 +20,17 @@ RUN apt-get update \
 	enscript lpr \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Add DOMjudge source code and build script
-ADD domjudge.tar.gz /domjudge-src
-COPY domserver/build.sh /domjudge-src/build.sh
+# Add DOMjudge source code with correct ownership
+# TODO: Once BuildKit v0.23.0 is widely available (released in 2025, the version can be checked using `docker buildx version`),
+# the following may be replaced with `ADD --chown=domjudge domjudge.tar.gz /domjudge-src` which is simpler and faster
+# (see https://github.com/moby/buildkit/pull/5987; earlier BuildKit versions don't change ownership recursively).
+# Likewise in docker/judgehost/Dockerfile.build.
+RUN mkdir /domjudge-src && chown domjudge: /domjudge-src
+COPY domjudge.tar.gz /domjudge-src/domjudge.tar.gz
+RUN cd /domjudge-src && su domjudge -c 'tar xzf domjudge.tar.gz' && rm domjudge.tar.gz
 
 # Build and install domserver
+COPY domserver/build.sh /domjudge-src/build.sh
 RUN /domjudge-src/build.sh
 
 # Now create an image with the actual build in it
