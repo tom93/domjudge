@@ -30,11 +30,13 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 	&& php composer-setup.php \
 	&& mv /composer.phar /usr/local/bin/composer
 
-# Add DOMjudge source code and build script
-ADD domjudge.tar.gz /domjudge-src
-COPY domserver/build.sh /domjudge-src/build.sh
+# Add DOMjudge source code with correct ownership
+RUN mkdir /domjudge-src && chown domjudge: /domjudge-src
+COPY domjudge.tar.gz /domjudge-src/domjudge.tar.gz
+RUN cd /domjudge-src && su domjudge -c 'tar xzf domjudge.tar.gz' && rm domjudge.tar.gz
 
 # Build and install domserver
+COPY domserver/build.sh /domjudge-src/build.sh
 RUN /domjudge-src/build.sh
 
 # Now create an image with the actual build in it
