@@ -20,16 +20,17 @@ RUN apt-get update \
 RUN useradd -m domjudge
 
 # Install composer
-
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 	&& php composer-setup.php \
 	&& mv /composer.phar /usr/local/bin/composer
 
-# Add DOMjudge source code and build script
-ADD domjudge.tar.gz /domjudge-src
-ADD judgehost/build.sh /domjudge-src
+# Add DOMjudge source code with correct ownership
+RUN mkdir /domjudge-src && chown domjudge: /domjudge-src
+COPY domjudge.tar.gz /domjudge-src/domjudge.tar.gz
+RUN cd /domjudge-src && su domjudge -c 'tar xzf domjudge.tar.gz' && rm domjudge.tar.gz
 
 # Build and install judgehost
+COPY judgehost/build.sh /domjudge-src/build.sh
 RUN /domjudge-src/build.sh
 
 # We need to mount proc, which is not possible in "docker build". Thus we need to run this when starting the container
