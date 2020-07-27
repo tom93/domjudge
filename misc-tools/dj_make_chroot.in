@@ -127,8 +127,7 @@ if [ "$DISTRO" = 'Debian' ]; then
 INCLUDEDEBS="ca-certificates"
 
 # Packages to install after upgrade (space separated):
-INSTALLDEBS="default-jre-headless pypy python3 locales"
-# For C# support add: mono-runtime
+INSTALLDEBS="default-jre-headless pypy python3 locales mono-runtime"
 
 # Packages to remove after upgrade (space separated):
 REMOVEDEBS=""
@@ -155,8 +154,7 @@ if [ "$DISTRO" = 'Ubuntu' ]; then
 INCLUDEDEBS="software-properties-common"
 
 # Packages to install after upgrade (space separated):
-INSTALLDEBS="default-jre-headless pypy python3 locales"
-# For C# support add: mono-runtime
+INSTALLDEBS="default-jre-headless pypy python3 locales mono-runtime"
 
 # Packages to remove after upgrade (space separated):
 REMOVEDEBS=""
