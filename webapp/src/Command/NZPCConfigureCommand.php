@@ -6,6 +6,7 @@ use App\Entity\Configuration;
 use App\Entity\ContestSite;
 use App\Entity\TeamAffiliation;
 use App\Entity\TeamCategory;
+use App\Entity\Language;
 use App\Service\ConfigurationService;
 use App\Service\DOMJudgeService;
 use App\Service\ImportExportService;
@@ -29,6 +30,8 @@ class NZPCConfigureCommand extends Command
     const CATEGORY_COLORS = ['#fffca6', '#ffcf9e', '#91b2ff', '#fff957', '#ff9cfc'];
 
     const CONTEST_SITE_NAMES = ['Auckland', 'Hamilton', 'Invercargill', 'Christchurch', 'Wellington', 'Dunedin'];
+
+    const LANGUAGE_IDS = ['c', 'cpp', 'java', 'py3', 'csharp'];
 
     /**
      * @var EntityManagerInterface
@@ -120,6 +123,8 @@ EOF
             ->addOption('no-sites', null, InputOption::VALUE_NONE)
             ->addOption('affiliations', null, InputOption::VALUE_NONE, 'Load the default NZPC affiliations')
             ->addOption('no-affiliations', null, InputOption::VALUE_NONE)
+            ->addOption('languages', null, InputOption::VALUE_NONE, 'Allow submissions in the default languages')
+            ->addOption('no-languages', null, InputOption::VALUE_NONE)
             ->addOption('enable-registration', null, InputOption::VALUE_NONE, 'Enable registration (not included in --all, must be specified explicitly)')
             ->addOption('disable-registration', null, InputOption::VALUE_NONE, 'Disable registration')
             ->addOption('export-affiliations', null, InputOption::VALUE_NONE, 'Output the existing affiliations in TSV format')
@@ -158,6 +163,10 @@ EOF
         if ($this->isTaskEnabled($input, 'affiliations')) {
             $tasksCount++;
             $this->taskAffiliations($input->getOption('affiliations-data'));
+        }
+        if ($this->isTaskEnabled($input, 'languages')) {
+            $tasksCount++;
+            $this->taskLanguages();
         }
 
         if ($input->getOption('enable-registration')) {
@@ -326,6 +335,37 @@ EOF
             $row  = [$affiliation->getShortname(), $affiliation->getName()];
             $line = implode("\t", str_replace(["\t", "\n", "\r"], " ", $row)) . "\n";
             $output->write($line, false /*$newline*/, OutputInterface::OUTPUT_RAW);
+        }
+    }
+
+    /**
+     * Allow submissions in the default languages
+     */
+    protected function taskLanguages()
+    {
+        $this->logger->notice('Enabling languages');
+        foreach (self::LANGUAGE_IDS as $langid) {
+            $lang = $this->em->getRepository(Language::class)->find($langid);
+            if (!$lang) {
+                $this->logger->warning("Language with ID '%s' not found", [$langid]);
+            } elseif ($lang->getAllowSubmit()) {
+                $this->logger->debug("Language '%s' already allows submissions", [$langid]);
+            } else {
+                $this->logger->info("Allowing submissions in language '%s' (%s)", [$langid, $lang->getName()]);
+                $lang->setAllowSubmit(true);
+                $this->em->flush();
+            }
+        }
+        $nonDefaultLanguages = $this->em->createQueryBuilder()
+            ->from(Language::class, 'l')
+            ->select('l')
+            ->andWhere('l.allowSubmit = 1')
+            ->andWhere('l.langid NOT IN (:defaultLanguageIds)')
+            ->setParameter(':defaultLanguageIds', self::LANGUAGE_IDS)
+            ->getQuery()
+            ->getResult();
+        foreach ($nonDefaultLanguages as $lang) {
+            $this->logger->warning("Non-default language '%s' (%s) is set to allow submissions", [$lang->getLangid(), $lang->getName()]);
         }
     }
 
