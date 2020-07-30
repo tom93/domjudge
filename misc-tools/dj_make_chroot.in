@@ -172,7 +172,6 @@ if [ "$DISTRO" = 'Debian' ]; then
     INSTALLDEBS="gcc g++ make default-jdk-headless default-jre-headless pypy3 locales"
     # For Rust support add: rustc to INSTALLDEBS, or, ./dj_make_chroot -i rustc
     # For C# support add: mono-runtime
-    # However running mono within chroot still gives errors...
 
     # Packages to remove after upgrade (space separated):
     REMOVEDEBS=""
@@ -207,7 +206,6 @@ if [ "$DISTRO" = 'Ubuntu' ]; then
     fi
 
     # For C# support add: mono-runtime
-    # However running mono within chroot still gives errors...
 
     # Packages to remove after upgrade (space separated):
     REMOVEDEBS=""
