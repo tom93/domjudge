@@ -671,15 +671,11 @@ class ImportExportService
         $createdOrganizations = [];
         $updatedOrganizations = [];
         foreach ($organizationData as $organizationItem) {
-            $externalId      = $organizationItem['externalid'];
-            $teamAffiliation = null;
+            $key             = isset($organizationItem['externalid']) ? 'externalid' : 'shortname';
+            $teamAffiliation = $this->em->getRepository(TeamAffiliation::class)->findOneBy([$key => $organizationItem[$key]]);
             $added           = false;
-            if ($externalId !== null) {
-                $teamAffiliation = $this->em->getRepository(TeamAffiliation::class)->findOneBy(['externalid' => $externalId]);
-            }
             if (!$teamAffiliation) {
                 $teamAffiliation = new TeamAffiliation();
-                $teamAffiliation->setExternalid($externalId);
                 $this->em->persist($teamAffiliation);
                 $added = true;
             }
@@ -687,6 +683,7 @@ class ImportExportService
                 throw new BadRequestHttpException('Shortname missing.');
             }
             $teamAffiliation
+                ->setExternalid(@$organizationItem['externalid'])
                 ->setShortname($organizationItem['shortname'])
                 ->setName($organizationItem['name'])
                 ->setCountry($organizationItem['country'])
