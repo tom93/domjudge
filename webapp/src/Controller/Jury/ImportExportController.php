@@ -244,7 +244,7 @@ class ImportExportController extends BaseController
     }
 
     /**
-     * @Route("/export/{type<groups|teams|scoreboard|results>}.tsv", name="jury_tsv_export")
+     * @Route("/export/{type<groups|organizations-nzpc|teams|scoreboard|results>}.tsv", name="jury_tsv_export")
      * @param Request $request
      * @param string  $type
      * @return RedirectResponse|StreamedResponse
@@ -258,6 +258,9 @@ class ImportExportController extends BaseController
             switch ($type) {
                 case 'groups':
                     $data = $this->importExportService->getGroupData();
+                    break;
+                case 'organizations-nzpc':
+                    $data = $this->importExportService->getOrganizationNzpcData();
                     break;
                 case 'teams':
                     $data = $this->importExportService->getTeamData();
@@ -277,7 +280,11 @@ class ImportExportController extends BaseController
 
         $response = new StreamedResponse();
         $response->setCallback(function () use ($type, $version, $data) {
-            echo sprintf("%s\t%s\n", $type, $version);
+            if ($type === 'organizations-nzpc') {
+                // In this format the tsv does not contain a version line.
+            } else {
+                echo sprintf("%s\t%s\n", $type, $version);
+            }
             // output the rows, escaping any reserved characters in the data
             foreach ($data as $row) {
                 echo implode("\t", array_map(function ($field) {

@@ -14,7 +14,7 @@
         <li>
             Tab separated, export:
             <ul>
-                {% for type in ['groups', 'teams', 'scoreboard'] %}
+                {% for type in ['groups', 'organizations-nzpc', 'teams', 'scoreboard'] %}
                     <li>
                         <a href="{{ path('jury_tsv_export', {'type': type}) }}"><code>{{ type }}.tsv</code></a>
                     </li>
