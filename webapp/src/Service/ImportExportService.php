@@ -832,7 +832,7 @@ class ImportExportService
     /**
      * Import organization data from the given array.
      *
-     * @param array<array{externalid: string, shortname?: string, icpc_id?: string, name: string, country: string}> $organizationData
+     * @param array<array{externalid: ?string, shortname?: string, icpc_id?: string, name: string, country: string}> $organizationData
      * @param TeamAffiliation[]|null $saved The saved groups
      *
      * @throws NonUniqueResultException
@@ -847,21 +847,18 @@ class ImportExportService
         $allOrganizations     = [];
         $anyErrors            = false;
         foreach ($organizationData as $index => $organizationItem) {
-            $externalId      = $organizationItem['externalid'];
-            $teamAffiliation = null;
+            $key             = $organizationItem['externalid'] !== null ? 'externalid' : 'shortname';
+            $teamAffiliation = $this->em->getRepository(TeamAffiliation::class)->findOneBy([$key => $organizationItem[$key]]);
             $added           = false;
-            if ($externalId !== null) {
-                $teamAffiliation = $this->em->getRepository(TeamAffiliation::class)->findOneBy(['externalid' => $externalId]);
-            }
             if (!$teamAffiliation) {
                 $teamAffiliation = new TeamAffiliation();
-                $teamAffiliation->setExternalid($externalId);
                 $added = true;
             }
             if (!isset($organizationItem['shortname'])) {
                 throw new BadRequestHttpException('Shortname missing.');
             }
             $teamAffiliation
+                ->setExternalid($organizationItem['externalid'] ?? null)
                 ->setShortname($organizationItem['shortname'])
                 ->setName($organizationItem['name'])
                 ->setCountry($organizationItem['country'])
