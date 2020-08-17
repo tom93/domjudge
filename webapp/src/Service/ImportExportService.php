@@ -832,7 +832,7 @@ class ImportExportService
     /**
      * Import organization data from the given array.
      *
-     * @param array<array{externalid: ?string, shortname?: string, icpc_id?: string, name: string, country: string}> $organizationData
+     * @param array<array{externalid: ?string, shortname?: string, icpc_id?: string, name: string, country: ?string}> $organizationData
      * @param TeamAffiliation[]|null $saved The saved groups
      *
      * @throws NonUniqueResultException
