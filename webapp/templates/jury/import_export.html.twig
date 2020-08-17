@@ -56,7 +56,7 @@
             <div class="tile">
                 <h3>Export tab-separated</h3>
                 <ul>
-                {% for type in ['groups', 'teams'] %}
+                {% for type in ['groups', 'organizations-nzpc', 'teams'] %}
                     <li>
                         <a href="{{ path('jury_tsv_export', {'type': type}) }}"><code>{{ type }}.tsv</code></a>
                     </li>
