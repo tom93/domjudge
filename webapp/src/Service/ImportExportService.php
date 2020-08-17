@@ -623,6 +623,11 @@ class ImportExportService
     public function importTsv(string $type, UploadedFile $file, ?string &$message = null): int
     {
         $content = file($file->getRealPath());
+        if ($type === 'organizations-nzpc') {
+            // In this format the tsv should not contain a version line.
+            // Insert a fake version line so the code below works.
+            array_unshift($content, sprintf("%s\t%s\n", $type, '1'));
+        }
         // The first line of the tsv is always the format with a version number.
         // Currently, we hardcode version 1 because there are no others.
         $version = rtrim(array_shift($content));
@@ -641,6 +646,8 @@ class ImportExportService
         switch ($type) {
             case 'groups':
                 return $this->importGroupsTsv($content, $message);
+            case 'organizations-nzpc':
+                return $this->importOrganizationsNzpcTsv($content, $message);
             case 'teams':
                 return $this->importTeamsTsv($content, $message);
             case 'accounts':
@@ -824,6 +831,35 @@ class ImportExportService
         }
 
         return count($groupData);
+    }
+
+    /**
+     * Import organizations TSV (NZPC format).
+     *
+     * @param string[] $content
+     */
+    protected function importOrganizationsNzpcTsv(array $content, string &$message = null): int
+    {
+        $organizationData = [];
+        $lineNr           = 1;
+        $lineNr--; // No version line
+        foreach ($content as $line) {
+            $lineNr++;
+            $line = Utils::parseTsvLine(trim($line));
+            if (count($line) !== 2) {
+                $message = sprintf('Cannot parse organization on line %d: expected 2 tab-separated values, found %d',
+                                   $lineNr, count($line));
+                return -1;
+            }
+            $organizationData[] = [
+                'externalid' => null,
+                'shortname' => @$line[0],
+                'name' => @$line[1],
+                'country' => null,
+            ];
+        }
+
+        return $this->importOrganizationData($organizationData);
     }
 
     /**
