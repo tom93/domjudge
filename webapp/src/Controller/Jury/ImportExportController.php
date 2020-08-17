@@ -281,7 +281,7 @@ class ImportExportController extends BaseController
         ]);
     }
 
-    #[Route(path: '/export/{type<groups|teams|wf_results|full_results>}.tsv', name: 'jury_tsv_export')]
+    #[Route(path: '/export/{type<groups|organizations-nzpc|teams|wf_results|full_results>}.tsv', name: 'jury_tsv_export')]
     public function exportTsvAction(
         string $type,
         #[MapQueryParameter(name: 'sort_order')]
@@ -293,6 +293,9 @@ class ImportExportController extends BaseController
             switch ($type) {
                 case 'groups':
                     $data = $this->importExportService->getGroupData();
+                    break;
+                case 'organizations-nzpc':
+                    $data = $this->importExportService->getOrganizationNzpcData();
                     break;
                 case 'teams':
                     $data = $this->importExportService->getTeamData();
@@ -314,7 +317,11 @@ class ImportExportController extends BaseController
         $response = new StreamedResponse();
         $response->setCallback(function () use ($tsvType, $data) {
             $version = 1;
-            echo sprintf("%s\t%s\n", $tsvType, $version);
+            if ($tsvType === 'organizations-nzpc') {
+                // In this format the tsv does not contain a version line.
+            } else {
+                echo sprintf("%s\t%s\n", $tsvType, $version);
+            }
             foreach ($data as $row) {
                 // Utils::toTsvFields handles escaping of reserved characters.
                 echo implode("\t", array_map(fn($field) => Utils::toTsvField((string)$field), $row)) . "\n";
