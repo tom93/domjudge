@@ -626,7 +626,7 @@ class ImportExportService
         $l--; // No version line
         foreach ($content as $line) {
             $l++;
-            $line = Utils::parseTsvLine(trim($line));
+            $line = explode("\t", trim($line));
             if (count($line) !== 2) {
                 $message = sprintf('cannot parse organization on line %d: expected 2 tab-separated values, found %d',
                                    $l, count($line));
