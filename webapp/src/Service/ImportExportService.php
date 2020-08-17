@@ -293,6 +293,25 @@ class ImportExportService
     }
 
     /**
+     * Get organization data (NZPC format).
+     */
+    public function getOrganizationNzpcData(): array
+    {
+        /** @var TeamAffiliation[] $affiliations */
+        $affiliations = $this->em->getRepository(TeamAffiliation::class)->findBy([], ['name' => 'ASC']);
+
+        $data = [];
+        foreach ($affiliations as $affiliation) {
+            $data[] = [
+                $affiliation->getShortname(),
+                $affiliation->getName(),
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
      * Get team data
      */
     public function getTeamData(): array
