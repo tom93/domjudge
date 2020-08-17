@@ -652,7 +652,7 @@ class ImportExportService
                 ->setExternalid(@$organizationItem['externalid'])
                 ->setShortname($organizationItem['shortname'])
                 ->setName($organizationItem['name'])
-                ->setCountry($organizationItem['country']);
+                ->setCountry(@$organizationItem['country']);
             $this->em->flush();
             if ($contest = $this->dj->getCurrentContest()) {
                 $this->eventLogService->log('team_affiliation', $teamAffiliation->getAffilid(), $action,
