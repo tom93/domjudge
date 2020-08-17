@@ -686,7 +686,7 @@ class ImportExportService
                 ->setExternalid(@$organizationItem['externalid'])
                 ->setShortname($organizationItem['shortname'])
                 ->setName($organizationItem['name'])
-                ->setCountry($organizationItem['country'])
+                ->setCountry(@$organizationItem['country'])
                 ->setIcpcid($organizationItem['icpc_id'] ?? null);
             $this->em->flush();
             if ($added) {
