@@ -41,7 +41,7 @@ install-domserver: $(ZIPFILES) $(TOPDIR)/doc/examples/.pdf-generated
 	$(INSTALL_DATA) -t $(DESTDIR)$(domserver_sqldir)/files/examples \
 		files/examples/*.zip
 	$(INSTALL_DATA) -t $(DESTDIR)$(domserver_sqldir)/files \
-		files/nzpc-organizations.tsv
+		files/organizations-nzpc.tsv
 
 # Make $(CONFSTUB) a dependency, and the other stuff sub-rules to make
 # sure that config.h already exists when creating the zipfiles.

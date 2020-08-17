@@ -129,7 +129,7 @@ EOF
             ->addOption('disable-registration', null, InputOption::VALUE_NONE, 'Disable registration')
             ->addOption('export-affiliations', null, InputOption::VALUE_NONE, 'Output the existing affiliations in TSV format')
             ->addOption('affiliations-data', null, InputOption::VALUE_REQUIRED, 'Path of affiliation data to load, in TSV format with columns shortname and name',
-                        sprintf('%s/files/nzpc-organizations.tsv', $this->sqlDir));
+                        sprintf('%s/files/organizations-nzpc.tsv', $this->sqlDir));
     }
 
     /**
