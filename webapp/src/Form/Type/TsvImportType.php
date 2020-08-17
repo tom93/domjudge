@@ -14,6 +14,7 @@ class TsvImportType extends AbstractType
         $builder->add('type', ChoiceType::class, [
             'choices' => [
                 'groups' => 'groups',
+                'organizations (NZPC)' => 'organizations-nzpc',
                 'teams' => 'teams',
                 'accounts' => 'accounts',
             ],
