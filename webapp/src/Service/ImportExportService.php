@@ -639,17 +639,17 @@ class ImportExportService
     protected function importOrganizationData(array $organizationData): int
     {
         foreach ($organizationData as $organizationItem) {
-            $externalId      = $organizationItem['externalid'];
-            $teamAffiliation = $this->em->getRepository(TeamAffiliation::class)->findOneBy(['externalid' => $externalId]);
+            $key             = isset($organizationItem['externalid']) ? 'externalid' : 'shortname';
+            $teamAffiliation = $this->em->getRepository(TeamAffiliation::class)->findOneBy([$key => $organizationItem[$key]]);
             if (!$teamAffiliation) {
                 $teamAffiliation = new TeamAffiliation();
-                $teamAffiliation->setExternalid($externalId);
                 $this->em->persist($teamAffiliation);
                 $action = EventLogService::ACTION_CREATE;
             } else {
                 $action = EventLogService::ACTION_UPDATE;
             }
             $teamAffiliation
+                ->setExternalid(@$organizationItem['externalid'])
                 ->setShortname($organizationItem['shortname'])
                 ->setName($organizationItem['name'])
                 ->setCountry($organizationItem['country']);
