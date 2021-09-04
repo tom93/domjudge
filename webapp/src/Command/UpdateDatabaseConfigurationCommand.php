@@ -69,8 +69,8 @@ class UpdateDatabaseConfigurationCommand extends Command
     {
         $this
             ->setName('domjudge:db-config:update')
-            ->setDescription('Update the database configuration from etc/db-config.yaml')
-            ->setHelp('Helps backport configuration changes from DOMjudge 7.3 to 7.2.')
+            ->setDescription('Update the configuration options in the database to match etc/db-config.yaml')
+            ->setHelp('Helps backport configuration changes from DOMjudge 7.3 to 7.2 by creating new options in the database to match options added to db-config.yaml (which was introduced in 7.3).')
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Show what would be done without modifying database');
     }
 
@@ -85,11 +85,13 @@ class UpdateDatabaseConfigurationCommand extends Command
             $output->setVerbosity(OutputInterface::VERBOSITY_VERY_VERBOSE);
         }
 
-        // Load db-config.yaml (see ConfigurationService.php on DOMjudge 7.3)
+        // Load db-config.yaml (see ConfigurationService.php in DOMjudge 7.3)
         $yamlDbConfigFile = $this->etcDir . '/db-config.yaml';
         $fileLocator      = new FileLocator($this->etcDir);
         $loader           = new YamlConfigLoader($fileLocator);
         $yamlConfig       = $loader->load($yamlDbConfigFile);
+
+	$this->logger->notice('Updating the configuration options in the database to match etc/db-config.yaml');
 
         $count = 0;
         foreach ($yamlConfig as $category) {
@@ -127,7 +129,7 @@ class UpdateDatabaseConfigurationCommand extends Command
                                 $this->em->flush();
                             }
                         } else {
-                            $this->logger->info("Configuration option '%s': value in database is %s, default value db-config.yaml is %s", [$item['name'], OutputFormatter::escape($this->dj->jsonEncode($currentValue)), OutputFormatter::escape($this->dj->jsonEncode($item['default_value']))]);
+                            $this->logger->debug("Configuration option '%s': value in database is %s, default value in db-config.yaml is %s", [$item['name'], OutputFormatter::escape($this->dj->jsonEncode($currentValue)), OutputFormatter::escape($this->dj->jsonEncode($item['default_value']))]);
                         }
                     }
                     if ($option->getPublic() !== $item['public']) {
