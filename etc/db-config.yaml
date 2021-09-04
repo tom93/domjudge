@@ -204,6 +204,11 @@
             default_value: true
             public: true
             description: Allow teams to create new affiliations during self-registration?
+        -   name: require_affiliation_unless_open
+            type: bool
+            default_value: false
+            public: true
+            description: Require teams to select an affiliation during self-registration, unless they register in the "Open" category. (Only applies if the "Open" category exists.)
         -   name: show_team_managers
             type: bool
             default_value: false

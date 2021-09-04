@@ -307,6 +307,19 @@ class UserRegistrationType extends AbstractType
                             ->addViolation();
                     }
                 }
+                if ((bool)$this->config->get('require_affiliation_unless_open')) {
+                    if ($form->get('affiliation')->getData() === 'none') {
+                        $teamCategoryField = $form->has('teamCategory') ? $form->get('teamCategory') : null; // field will not exist if there is only one category
+                        $teamCategory = $teamCategoryField ? $teamCategoryField->getData() : null; // category will be null if field wasn't filled in
+                        if ($teamCategory && $teamCategory->getName() !== 'Open') {
+                            if ($this->em->getRepository(TeamCategory::class)->count(['name' => 'Open', 'allow_self_registration' => 1]) > 0) {
+                                $context->buildViolation(sprintf("This affiliation is not eligible for the '%s' category. Please switch to the 'Open' category, or choose a different affiliation.", $teamCategory->getName()))
+                                    ->atPath('affiliation')
+                                    ->addViolation();
+                            }
+                        }
+                    }
+                }
             }
         };
         $resolver->setDefaults(
