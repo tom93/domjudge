@@ -182,6 +182,11 @@
             default_value: true
             public: true
             description: Show team members on the scoreboard?
+        -   name: team_members_required
+            type: bool
+            default_value: false
+            public: true
+            description: Require team members to be provided during self-registration?
         -   name: show_flags
             type: bool
             default_value: true
