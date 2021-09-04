@@ -60,6 +60,7 @@ class ConfigurationService
         'team_members_required' => false,
         'show_teams_with_no_submissions' => true,
         'show_new_affiliation_option' => true,
+        'require_affiliation_unless_open' => true,
         'show_user_emails' => true,
         'show_team_managers' => false,
         'show_team_manager_emails' => false,
