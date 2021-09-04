@@ -203,6 +203,13 @@ EOF
         $this->doConfigure('show_user_emails', false);
         $this->doConfigure('show_team_managers', true);
         $this->doConfigure('show_team_manager_emails', true);
+        $this->doConfigure('show_team_members', true); // show the "Team members" field during registration (default)
+        // The following configuration items are mainly for online-only contests.
+        // We require the "Team members" field to be filled in, so we can validate the membership of the winning teams.
+        $this->doConfigure('team_members_required', true); // require "Team members" field to be filled in during registration
+        // We don't display the team members publicly (it would be fine to display them if they were optional, but not if they are required).
+        $this->doConfigure('show_team_members_publicly', false); // hide the "Team members" field from the scoreboard
+        // End of configuration items for online-only contests.
         // $this->doConfigure('show_teams_with_no_submissions', false); // not used in NZPC
     }
 
