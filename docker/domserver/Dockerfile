@@ -28,7 +28,7 @@ RUN useradd -m domjudge
 
 # Install composer
 ADD https://getcomposer.org/installer composer-setup.php
-RUN php composer-setup.php \
+RUN php composer-setup.php --1 \
     && mv /composer.phar /usr/local/bin/composer
 
 # Add DOMjudge source code
@@ -69,7 +69,7 @@ RUN useradd -m domjudge
 
 # Install composer
 ADD https://getcomposer.org/installer composer-setup.php
-RUN php composer-setup.php \
+RUN php composer-setup.php --1 \
     && mv /composer.phar /usr/local/bin/composer
 
 # Copy domserver directory and add script files
