@@ -196,6 +196,11 @@
             default_value: false
             public: true
             description: Show team members field in the self-registration form?
+        -   name: team_members_required
+            type: bool
+            default_value: false
+            public: true
+            description: Require team members to be provided during self-registration?
         -   name: show_flags
             type: bool
             default_value: true
