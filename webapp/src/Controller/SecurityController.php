@@ -141,7 +141,11 @@ class SecurityController extends AbstractController
                 ->setInternalComments('Registered by ' . $this->dj->getClientIp() . ' on ' . date('r'));
 
             if ($this->config->get('show_team_members_in_reg_form')) {
-                $team->setPublicDescription("Members:\n" . $registration_form->get('members')->getData());
+                if ($this->config->get('show_team_members_publicly')) {
+                    $team->setPublicDescription("Members:\n" . $registration_form->get('members')->getData());
+                } else {
+                    $team->setInternalComments("Members:\n" . $registration_form->get('members')->getData());
+                }
             }
 
             if ($this->config->get('show_affiliations')) {
