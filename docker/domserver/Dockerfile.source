@@ -15,7 +15,7 @@
 # docker run --rm domjudge/dist:<VERSION> tar cz -C /domjudge-src domjudge > docker/domjudge.tar.gz
 # docker rmi domjudge/dist:<VERSION>
 
-FROM debian:latest AS dist
+FROM debian:10 AS dist
 MAINTAINER DOMjudge team <team@domjudge.org>
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -66,7 +66,7 @@ ADD docker/domserver/build.sh /domjudge-src
 RUN /domjudge-src/build.sh
 
 # Now create an image with the actual build in it
-FROM debian:latest
+FROM debian:10
 MAINTAINER DOMjudge team <team@domjudge.org>
 
 ENV DEBIAN_FRONTEND=noninteractive \
