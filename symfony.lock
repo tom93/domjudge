@@ -518,9 +518,6 @@
     "symfony/polyfill-php73": {
         "version": "v1.11.0"
     },
-    "symfony/profiler-pack": {
-        "version": "v1.0.4"
-    },
     "symfony/property-access": {
         "version": "v4.3.2"
     },
