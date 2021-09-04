@@ -123,13 +123,15 @@ class UserRegistrationType extends AbstractType
         }
 
         if ($this->config->get('show_team_members_in_reg_form')) {
-            $teamMembersRequired = (bool)$this->config->get('team_members_required');
+            $showTeamMembersPublicly = (bool)$this->config->get('show_team_members_publicly');
+            $teamMembersRequired     = (bool)$this->config->get('team_members_required');
             $builder
                 ->add('members', TextareaType::class, [
                     'label' => false,
                     'mapped' => false,
                     'attr' => [
                         'placeholder' => $teamMembersRequired ? 'Team members' : 'Team members (optional)',
+                        'title' => $showTeamMembersPublicly ? 'Displayed on the scoreboard.' : 'Only visible to administrators.',
                     ],
                     'required' => $teamMembersRequired,
                     'constraints' => $teamMembersRequired ? [new NotBlank()] : [],
