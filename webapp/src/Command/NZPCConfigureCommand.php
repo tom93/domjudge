@@ -245,7 +245,7 @@ EOF
         if ($current === $value || (is_bool($value) && $current === (int)$value)) {
             $this->logger->debug("Configuration option '%s' is already set to %s", [$name, OutputFormatter::escape($this->dj->jsonEncode($value))]);
         } elseif ($this->isConfigurationSet($name)) {
-            $this->logger->warning("Skipping configuration option '%s' because it has already been set to a different value: %s", [$name, OutputFormatter::escape($this->dj->jsonEncode($current))]);
+            $this->logger->notice("Skipping configuration option '%s' because it has already been set to a different value: %s", [$name, OutputFormatter::escape($this->dj->jsonEncode($current))]);
         } else {
             $this->logger->info("Setting configuration option '%s' to %s", [$name, OutputFormatter::escape($this->dj->jsonEncode($value))]);
             $this->setConfiguration($name, $value);
@@ -314,7 +314,19 @@ EOF
             } else {
                 $shortname = $row[0];
                 $name      = $row[1];
-                if ($this->em->getRepository(TeamAffiliation::class)->count(['shortname' => $shortname]) === 0) {
+                if (($existing = $this->em->getRepository(TeamAffiliation::class)->findOneBy(['shortname' => $shortname]))) {
+                    if ($existing->getName() === $name) {
+                        $this->logger->debug("Team affiliation with shortname '%s' already exists", [OutputFormatter::escape($shortname)]);
+                    } else {
+                        // The name in the database does not match the name in the file we are importing.
+                        // We can't tell which version is most up-to-date, so we just print a warning without modifying the database.
+                        $this->logger->notice("Team affiliation with shortname '%s' has name '%s' in database but '%s' in %s", [OutputFormatter::escape($shortname), OutputFormatter::escape($existing->getName()), OutputFormatter::escape($name), OutputFormatter::escape($path)]);
+                    }
+                } elseif (($existing = $this->em->getRepository(TeamAffiliation::class)->findOneBy(['name' => $name]))) {
+                    // The shortname in the database does not match the shortname in the file we are importing.
+                    // We can't tell which version is most up-to-date, so we just print a warning without modifying the database.
+                    $this->logger->notice("Team affiliation with name '%s' has shortname '%s' in database but '%s' in %s", [OutputFormatter::escape($name), OutputFormatter::escape($existing->getShortname()), OutputFormatter::escape($shortname), OutputFormatter::escape($path)]);
+                } else {
                     $count++;
                     $this->logger->debug("Importing affiliation '%s'", [OutputFormatter::escape($name)]);
                     $affiliation = new TeamAffiliation();
@@ -322,8 +334,6 @@ EOF
                     $affiliation->setName($name);
                     $this->em->persist($affiliation);
                     $this->em->flush();
-                } else {
-                    $this->logger->debug("Team affiliation '%s' already exists", [OutputFormatter::escape($shortname)]);
                 }
             }
         }
