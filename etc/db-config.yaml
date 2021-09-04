@@ -201,6 +201,11 @@
             default_value: false
             public: true
             description: Require team members to be provided during self-registration?
+        -   name: show_team_members_publicly
+            type: bool
+            default_value: true
+            public: true
+            description: Show team members on the scoreboard? (Only applies to new registrations. If true, the members are stored in the public description field; if false, the members are stored in the internal comments field.)
         -   name: show_flags
             type: bool
             default_value: true
