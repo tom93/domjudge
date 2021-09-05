@@ -14,11 +14,13 @@ RUN apt-get update \
 	sudo bsdmainutils ntp libcgroup-dev procps \
 	linuxdoc-tools linuxdoc-tools-text groff \
 	python3-sphinx python3-sphinx-rtd-theme python3-pip fontconfig python3-yaml \
+	python3-setuptools python3-wheel python3-dev \
 	texlive-latex-recommended texlive-latex-extra \
 	texlive-fonts-recommended texlive-lang-european \
 	libcurl4-gnutls-dev libjsoncpp-dev libmagic-dev \
 	enscript lpr ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
+# packages python3-setuptools, python3-wheel, python3-dev are not required on Debian 11 and later
 
 # Needed for building the docs
 RUN pip3 install pygments rst2pdf
