@@ -200,6 +200,7 @@ EOF
         $this->logger->notice('Setting configuration options for NZPC');
         $this->doConfigure('show_flags', false); // hides "Affiliation country" field during registration
         $this->doConfigure('show_new_affiliation_option', false);
+        $this->doConfigure('require_affiliation_unless_open', true); // prevents School/Tertiary teams from choosing "No affiliation" during registration
         $this->doConfigure('show_user_emails', false);
         $this->doConfigure('show_team_managers', true);
         $this->doConfigure('show_team_manager_emails', true);
