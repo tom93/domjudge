@@ -8,10 +8,24 @@ Replace the environment variable DJ_DB_INSTALL_BARE (which switched
 between 'install' and 'bare-install') with an environment variable
 DJ_DB_INSTALL that can be set to any command name.
 ---
+ docker/README.md                                | 2 +-
  docker/domserver/Dockerfile                     | 2 +-
  docker/domserver/scripts/start.d/50-domjudge.sh | 6 +-----
- 2 files changed, 2 insertions(+), 6 deletions(-)
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
+diff --git a/docker/README.md b/docker/README.md
+index 2f33b9476..636d448cb 100644
+--- a/docker/README.md
++++ b/docker/README.md
+@@ -80,7 +80,7 @@ The following environment variables are supported by the `domserver` container:
+ * `MYSQL_PASSWORD` (defaults to `domjudge`): set the password to use for connecting to MySQL.
+ * `MYSQL_ROOT_PASSWORD` (defaults to `domjudge`): set the root password to use for connecting to MySQL.
+ * `MYSQL_DATABASE` (defaults to `domjudge`): set the database to use.
+-* `DJ_DB_INSTALL_BARE` (defaults to `0`): set to `1` to do a `bare-install` for the database instead of a normal `install`.
++* `DJ_DB_INSTALL` (defaults to `install`): command to pass to `dj_setup_database`, set to `bare-install` to skip creation of example contest and users.
+ * `FPM_MAX_CHILDREN` (defaults to `40`): the maximum number of PHP FPM children to spawn.
+ * `TRUSTED_PROXIES` (defaults to empty): The IP list of trusted proxy servers, separated by a comma(`,`).
+ * `WEBAPP_BASEURL` (defaults to `/`): The Base Url of DOMserver. Such as `/domjudge`, You can access the DOMserver homepage via `http://localhost/domjudge`.
 diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
 index 8279b3c5a..d39d3e329 100644
 --- a/docker/domserver/Dockerfile
