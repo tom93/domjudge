@@ -1,0 +1,83 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 21 Jul 2020 05:28:38 +1200
+Subject: Implement Dockerfile.source for building domserver image from source
+
+---
+ docker/domserver/Dockerfile.source | 39 ++++++++++++++++++++++++------
+ 1 file changed, 32 insertions(+), 7 deletions(-)
+
+diff --git a/docker/domserver/Dockerfile.source b/docker/domserver/Dockerfile.source
+index b0880704a..8674befbc 100644
+--- a/docker/domserver/Dockerfile.source
++++ b/docker/domserver/Dockerfile.source
+@@ -1,4 +1,21 @@
+-FROM debian:latest AS domserver-build
++# This Dockerfile builds the domserver image from source.
++#
++# It is based on domserver/Dockerfile, but bootstraps from source instead of
++# using a release tarball.
++#
++# The build context should be the root directory of the project, unlike the
++# other Dockerfiles which expect the build context to be the "docker"
++# directory.
++#
++# This Dockerfile can also be used to create a release tarball (without
++# building the domserver image) as follows:
++#
++# tar c --exclude=./.git --exclude=./docker/domjudge.tar.gz . |
++#   docker build --target=dist -t domjudge/dist:<VERSION> -f docker/domserver/Dockerfile.source -
++# docker run --rm domjudge/dist:<VERSION> tar cz -C /domjudge-src domjudge > docker/domjudge.tar.gz
++# docker rmi domjudge/dist:<VERSION>
++
++FROM debian:latest AS dist
+ MAINTAINER DOMjudge team <team@domjudge.org>
+ 
+ ENV DEBIAN_FRONTEND=noninteractive
+@@ -31,13 +48,21 @@ ADD https://getcomposer.org/installer composer-setup.php
+ RUN php composer-setup.php \
+     && mv /composer.phar /usr/local/bin/composer
+ 
++# Install PHP dependencies
++# (also done by "make ... dist" below, but we do it here *before* adding the rest of the source to leverage the build cache)
++COPY --chown=domjudge composer.json composer.lock /domjudge-src/domjudge/
++RUN cd /domjudge-src/domjudge && sudo -u domjudge composer install --prefer-dist -o --no-scripts
++
+ # Add DOMjudge source code
+-ADD domjudge.tar.gz /domjudge-src
+-RUN find /domjudge-src/domjudge* '(' ! -user domjudge -o ! -group domjudge ')' -execdir \
+-	chown domjudge:domjudge {} +
++COPY --chown=domjudge . /domjudge-src/domjudge
++
++# Bootstrap the configure/build system
++RUN sudo -u domjudge make -C /domjudge-src/domjudge dist
++
++FROM dist AS domserver-build
+ 
+ # Build and install domserver
+-ADD domserver/build.sh /domjudge-src
++ADD docker/domserver/build.sh /domjudge-src
+ RUN /domjudge-src/build.sh
+ 
+ # Now create an image with the actual build in it
+@@ -76,7 +101,7 @@ RUN php composer-setup.php \
+ RUN mkdir /opt/domjudge && chown domjudge: /opt/domjudge
+ COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjudge/domserver
+ COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
+-COPY ["domserver/scripts", "/scripts/"]
++COPY ["docker/domserver/scripts", "/scripts/"]
+ 
+ # Create PHP FPM socket dir, change permissions for some domjudge directories and fix scripts
+ RUN mkdir -p /run/php \
+@@ -89,7 +114,7 @@ RUN mkdir -p /run/php \
+ CMD ["/scripts/start.sh"]
+ 
+ # Copy supervisor files
+-COPY ["domserver/supervisor", "/etc/supervisor/conf.d/"]
++COPY ["docker/domserver/supervisor", "/etc/supervisor/conf.d/"]
+ 
+ # Expose HTTP port
+ EXPOSE 80
+-- 
+2.20.1
+
