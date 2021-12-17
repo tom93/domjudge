@@ -15,79 +15,88 @@ optimise the case where the files already have the correct ownership.
 [1] https://github.com/docker/for-linux issue 388
 [2] https://github.com/moby/moby issue 35525
 ---
- docker/domserver/Dockerfile       | 20 ++++++++++++--------
+ docker/domserver/Dockerfile       | 14 ++++++++++----
  docker/domserver/build.sh         |  1 -
- docker/judgehost/Dockerfile       |  9 +++++----
+ docker/domserver/configure.sh     |  4 +---
+ docker/judgehost/Dockerfile       |  3 +++
  docker/judgehost/Dockerfile.build |  6 ++++--
- docker/judgehost/build.sh         |  2 +-
- 5 files changed, 22 insertions(+), 16 deletions(-)
+ docker/judgehost/build.sh         |  1 -
+ docker/judgehost/configure.sh     |  3 ---
+ 7 files changed, 18 insertions(+), 14 deletions(-)
 
 diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
-index 6a54c5480..b0880704a 100644
+index d39d3e329..5b5534cb1 100644
 --- a/docker/domserver/Dockerfile
 +++ b/docker/domserver/Dockerfile
-@@ -31,11 +31,13 @@ ADD https://getcomposer.org/installer composer-setup.php
- RUN php composer-setup.php \
-     && mv /composer.phar /usr/local/bin/composer
+@@ -30,11 +30,13 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+ 	&& php composer-setup.php \
+ 	&& mv /composer.phar /usr/local/bin/composer
  
 -# Add DOMjudge source code and build script
 +# Add DOMjudge source code
  ADD domjudge.tar.gz /domjudge-src
--ADD domserver/build.sh /domjudge-src
+-COPY domserver/build.sh /domjudge-src/build.sh
 +RUN find /domjudge-src/domjudge* '(' ! -user domjudge -o ! -group domjudge ')' -execdir \
 +	chown domjudge:domjudge {} +
  
  # Build and install domserver
-+ADD domserver/build.sh /domjudge-src
++COPY domserver/build.sh /domjudge-src/build.sh
  RUN /domjudge-src/build.sh
  
  # Now create an image with the actual build in it
-@@ -62,20 +64,22 @@ RUN apt-get update \
- 	enscript lpr \
+@@ -62,14 +64,18 @@ RUN apt-get update \
+ 	ca-certificates python3-yaml \
  	&& rm -rf /var/lib/apt/lists/*
  
 +# Set up user
 +RUN useradd -m domjudge
 +
  # Install composer
- ADD https://getcomposer.org/installer composer-setup.php
- RUN php composer-setup.php \
-     && mv /composer.phar /usr/local/bin/composer
+ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+ 	&& php composer-setup.php \
+ 	&& mv /composer.phar /usr/local/bin/composer
  
- # Copy domserver directory and add script files
+ # Copy domserver
 -COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
 -COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
 +RUN mkdir /opt/domjudge && chown domjudge: /opt/domjudge
 +COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjudge/domserver
 +COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
- COPY ["domserver/scripts", "/scripts/"]
  
--# Add user, create PHP FPM socket dir, change permissions for domjudge directory and fix scripts
--RUN useradd -m domjudge \
--	&& mkdir -p /run/php \
--	&& chown -R domjudge: /opt/domjudge \
-+# Create PHP FPM socket dir, change permissions for some domjudge directories and fix scripts
-+RUN mkdir -p /run/php \
- 	&& chown -R www-data: /opt/domjudge/domserver/tmp \
- 	# for DOMjudge <= 7.2 (submitdir was removed in commit DOMjudge/domjudge@d66725038)
- 	&& if [ -d /opt/domjudge/domserver/submissions ]; then chown -R www-data: /opt/domjudge/domserver/submissions; fi \
+ # Copy scripts
+ COPY domserver/scripts /scripts/
 diff --git a/docker/domserver/build.sh b/docker/domserver/build.sh
-index f616c9e7b..7787d6b30 100755
+index 8b3c771fa..db1d2fe71 100755
 --- a/docker/domserver/build.sh
 +++ b/docker/domserver/build.sh
 @@ -1,7 +1,6 @@
- #!/bin/bash -e
+ #!/bin/sh -eu
  
  cd /domjudge-src/domjudge*
 -chown -R domjudge: .
+ # If we used a local source tarball, it might not have been built yet
+ sudo -u domjudge make dist
  sudo -u domjudge ./configure -with-baseurl=http://localhost/
+diff --git a/docker/domserver/configure.sh b/docker/domserver/configure.sh
+index 556840463..bd31d9372 100644
+--- a/docker/domserver/configure.sh
++++ b/docker/domserver/configure.sh
+@@ -1,9 +1,7 @@
+ #!/bin/sh -eu
  
- # Passwords should not be included in the built image. We create empty files here to prevent passwords from being generated.
+-# Add user, create PHP FPM socket dir, change permissions for domjudge directory and fix scripts
+-useradd -m domjudge
++# Create PHP FPM socket dir, change permissions for some domjudge directories and fix scripts
+ mkdir -p /run/php
+-chown -R domjudge: /opt/domjudge
+ chown -R www-data: /opt/domjudge/domserver/tmp
+ # for DOMjudge <= 7.2 (submitdir was removed in commit DOMjudge/domjudge@d66725038)
+ if [ -d /opt/domjudge/domserver/submissions ]
 diff --git a/docker/judgehost/Dockerfile b/docker/judgehost/Dockerfile
-index a9f7e7d82..96eea8632 100644
+index 5ec91ffa8..1fcb59624 100644
 --- a/docker/judgehost/Dockerfile
 +++ b/docker/judgehost/Dockerfile
-@@ -19,6 +19,9 @@ RUN apt-get update \
+@@ -20,6 +20,9 @@ RUN apt-get update \
  	gcc g++ default-jre-headless default-jdk-headless ghc fp-compiler \
  	&& rm -rf /var/lib/apt/lists/*
  
@@ -97,24 +106,13 @@ index a9f7e7d82..96eea8632 100644
  # Add chroot and judgehost data
  ADD chroot.tar.gz /
  ADD judgehost.tar.gz /
-@@ -27,8 +30,6 @@ RUN cp /opt/domjudge/judgehost/etc/sudoers-domjudge /etc/sudoers.d/
- # Add scripts
- COPY ["judgehost/scripts", "/scripts/"]
- 
--# Change start script permissions, add user and fix permissions
--RUN chmod +x /scripts/start.sh \
--	&& useradd -m domjudge \
--	&& chown -R domjudge: /opt/domjudge
-+# Change start script permissions
-+RUN chmod +x /scripts/start.sh
- CMD ["/scripts/start.sh"]
 diff --git a/docker/judgehost/Dockerfile.build b/docker/judgehost/Dockerfile.build
-index 8783e8bd3..3fdbeb30d 100644
+index e7d770325..f1a2e56d2 100644
 --- a/docker/judgehost/Dockerfile.build
 +++ b/docker/judgehost/Dockerfile.build
-@@ -23,11 +23,13 @@ ADD https://getcomposer.org/installer composer-setup.php
- RUN php composer-setup.php \
-     && mv /composer.phar /usr/local/bin/composer
+@@ -25,11 +25,13 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+ 	&& php composer-setup.php \
+ 	&& mv /composer.phar /usr/local/bin/composer
  
 -# Add DOMjudge source code and build script
 +# Add DOMjudge source code
@@ -129,18 +127,30 @@ index 8783e8bd3..3fdbeb30d 100644
  
  # We need to mount proc, which is not possible in "docker build". Thus we need to run this when starting the container
 diff --git a/docker/judgehost/build.sh b/docker/judgehost/build.sh
-index 8ddaf980a..3560c8fb1 100755
+index ad81dbac8..3a8782940 100755
 --- a/docker/judgehost/build.sh
 +++ b/docker/judgehost/build.sh
-@@ -2,7 +2,7 @@
+@@ -1,7 +1,6 @@
+ #!/bin/sh -eu
  
  cd /domjudge-src/domjudge*
- echo "default	http://localhost/api	dummy	dummy" > etc/restapi.secret
 -chown -R domjudge: .
-+chown domjudge: etc/restapi.secret
+ # If we used a local source tarball, it might not have been built yet
+ sudo -u domjudge make configure
  sudo -u domjudge ./configure -with-baseurl=http://localhost/
- sudo -u domjudge make judgehost
- make install-judgehost
+diff --git a/docker/judgehost/configure.sh b/docker/judgehost/configure.sh
+index e6766a4e5..013487f7a 100644
+--- a/docker/judgehost/configure.sh
++++ b/docker/judgehost/configure.sh
+@@ -1,8 +1,5 @@
+ #!/bin/bash -e
+ 
+-useradd -m domjudge
+-chown -R domjudge: /opt/domjudge
+-
+ chmod 755 /scripts/start.sh
+ for script in /scripts/bin/*
+ do
 -- 
 2.20.1
 

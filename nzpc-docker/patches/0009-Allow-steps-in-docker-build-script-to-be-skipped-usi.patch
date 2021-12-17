@@ -15,19 +15,19 @@ Hub aren't relevant).
  1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/docker/build.sh b/docker/build.sh
-index 94dd8f1d5..235725284 100755
+index 2e9910e30..75ee029d4 100755
 --- a/docker/build.sh
 +++ b/docker/build.sh
-@@ -8,7 +8,7 @@ then
- 	exit 1
- fi
+@@ -15,7 +15,7 @@ fi
+ 
+ VERSION="$1"
  
 -if false; then
 +if [ "${BUILD_DOWNLOAD_RELEASE-0}" != 0 ]; then
  URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
  FILE=domjudge.tar.gz
  
-@@ -23,17 +23,22 @@ fi
+@@ -30,25 +30,34 @@ fi
  echo "[ok] DOMjudge version ${VERSION} downloaded as domjudge.tar.gz"; echo
  fi
  
@@ -41,24 +41,20 @@ index 94dd8f1d5..235725284 100755
 +fi
  
 +if [ "${BUILD_DOMSERVER-1}" != 0 ]; then
- echo "[..] Building Docker image for domserver using intermediate build image..."
- docker build -t domjudge/domserver:${VERSION} -f domserver/Dockerfile .
+ echo "[..] Building Docker image for domserver..."
+ ./build-domjudge.sh "domjudge/domserver:${VERSION}"
  echo "[ok] Done building Docker image for domserver"
 +fi
  
 +if [ "${BUILD_JUDGEHOST-1}" != 0 ]; then
  echo "[..] Building Docker image for judgehost using intermediate build image..."
- docker build -t domjudge/judgehost:${VERSION}-build -f judgehost/Dockerfile.build .
- docker rm -f domjudge-judgehost-${VERSION}-build > /dev/null 2>&1 || true
-@@ -44,11 +49,15 @@ docker rm -f domjudge-judgehost-${VERSION}-build
- docker rmi domjudge/judgehost:${VERSION}-build
- docker build -t domjudge/judgehost:${VERSION} -f judgehost/Dockerfile .
+ ./build-judgehost.sh "domjudge/judgehost:${VERSION}"
  echo "[ok] Done building Docker image for judgehost"
 +fi
  
 +if [ "${BUILD_DEFAULT_JUDGEHOST_CHROOT-0}" != 0 ]; then
  echo "[..] Building Docker image for judgehost chroot..."
- docker build -t domjudge/default-judgehost-chroot:${VERSION} -f judgehost/Dockerfile.chroot .
+ docker build -t "domjudge/default-judgehost-chroot:${VERSION}" -f judgehost/Dockerfile.chroot .
  echo "[ok] Done building Docker image for judgehost chroot"
 +fi
  

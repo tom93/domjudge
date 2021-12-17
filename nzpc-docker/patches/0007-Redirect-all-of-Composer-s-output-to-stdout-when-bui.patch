@@ -11,10 +11,10 @@ stderr in red, which makes Composer's output very distracting.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/docker/domserver/Dockerfile.source b/docker/domserver/Dockerfile.source
-index 8674befbc..4846c1af0 100644
+index 3b0d255c5..317a21008 100644
 --- a/docker/domserver/Dockerfile.source
 +++ b/docker/domserver/Dockerfile.source
-@@ -51,7 +51,7 @@ RUN php composer-setup.php \
+@@ -50,7 +50,7 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
  # Install PHP dependencies
  # (also done by "make ... dist" below, but we do it here *before* adding the rest of the source to leverage the build cache)
  COPY --chown=domjudge composer.json composer.lock /domjudge-src/domjudge/

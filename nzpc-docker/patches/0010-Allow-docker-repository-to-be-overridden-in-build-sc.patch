@@ -5,23 +5,23 @@ Subject: Allow docker repository to be overridden in build script using
  environment variable
 
 ---
- docker/build.sh | 32 +++++++++++++++++---------------
- 1 file changed, 17 insertions(+), 15 deletions(-)
+ docker/build.sh | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
 diff --git a/docker/build.sh b/docker/build.sh
-index 235725284..ae5b7d106 100755
+index 75ee029d4..b379198c8 100755
 --- a/docker/build.sh
 +++ b/docker/build.sh
-@@ -8,6 +8,8 @@ then
- 	exit 1
- fi
+@@ -15,6 +15,8 @@ fi
+ 
+ VERSION="$1"
  
 +REPOSITORY="${BUILD_REPOSITORY-domjudge}"
 +
  if [ "${BUILD_DOWNLOAD_RELEASE-0}" != 0 ]; then
  URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
  FILE=domjudge.tar.gz
-@@ -26,44 +28,44 @@ fi
+@@ -33,37 +35,37 @@ fi
  if [ "${BUILD_FROM_SOURCE-1}" != 0 ]; then
  echo "[..] Boostrapping..."
  tar c -C .. --exclude=./.git --exclude="./docker/*.tar.gz" . |
@@ -35,32 +35,22 @@ index 235725284..ae5b7d106 100755
  fi
  
  if [ "${BUILD_DOMSERVER-1}" != 0 ]; then
- echo "[..] Building Docker image for domserver using intermediate build image..."
--docker build -t domjudge/domserver:${VERSION} -f domserver/Dockerfile .
-+docker build -t "$REPOSITORY/domserver:${VERSION}" -f domserver/Dockerfile .
+ echo "[..] Building Docker image for domserver..."
+-./build-domjudge.sh "domjudge/domserver:${VERSION}"
++./build-domjudge.sh "$REPOSITORY/domserver:${VERSION}"
  echo "[ok] Done building Docker image for domserver"
  fi
  
  if [ "${BUILD_JUDGEHOST-1}" != 0 ]; then
  echo "[..] Building Docker image for judgehost using intermediate build image..."
--docker build -t domjudge/judgehost:${VERSION}-build -f judgehost/Dockerfile.build .
-+docker build -t "$REPOSITORY/judgehost:${VERSION}-build" -f judgehost/Dockerfile.build .
- docker rm -f domjudge-judgehost-${VERSION}-build > /dev/null 2>&1 || true
--docker run --name domjudge-judgehost-${VERSION}-build --privileged domjudge/judgehost:${VERSION}-build
-+docker run --name domjudge-judgehost-${VERSION}-build --privileged "$REPOSITORY/judgehost:${VERSION}-build"
- docker cp domjudge-judgehost-${VERSION}-build:/chroot.tar.gz .
- docker cp domjudge-judgehost-${VERSION}-build:/judgehost.tar.gz .
- docker rm -f domjudge-judgehost-${VERSION}-build
--docker rmi domjudge/judgehost:${VERSION}-build
--docker build -t domjudge/judgehost:${VERSION} -f judgehost/Dockerfile .
-+docker rmi "$REPOSITORY/judgehost:${VERSION}-build"
-+docker build -t "$REPOSITORY/judgehost:${VERSION}" -f judgehost/Dockerfile .
+-./build-judgehost.sh "domjudge/judgehost:${VERSION}"
++./build-judgehost.sh "$REPOSITORY/judgehost:${VERSION}"
  echo "[ok] Done building Docker image for judgehost"
  fi
  
  if [ "${BUILD_DEFAULT_JUDGEHOST_CHROOT-0}" != 0 ]; then
  echo "[..] Building Docker image for judgehost chroot..."
--docker build -t domjudge/default-judgehost-chroot:${VERSION} -f judgehost/Dockerfile.chroot .
+-docker build -t "domjudge/default-judgehost-chroot:${VERSION}" -f judgehost/Dockerfile.chroot .
 +docker build -t "$REPOSITORY/default-judgehost-chroot:${VERSION}" -f judgehost/Dockerfile.chroot .
  echo "[ok] Done building Docker image for judgehost chroot"
  fi

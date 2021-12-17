@@ -9,15 +9,15 @@ Subject: Abort on errors in chroot-and-tar.sh when building judgehost docker
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/docker/judgehost/chroot-and-tar.sh b/docker/judgehost/chroot-and-tar.sh
-index 542319a41..4e2b12ea5 100755
+index 71c9308c0..c6a6474e8 100755
 --- a/docker/judgehost/chroot-and-tar.sh
 +++ b/docker/judgehost/chroot-and-tar.sh
 @@ -1,4 +1,4 @@
 -#!/bin/bash
 +#!/bin/bash -e
- /opt/domjudge/judgehost/bin/dj_make_chroot
  
- cd /
+ # Add packages with -i "<apt package name>" here
+ /opt/domjudge/judgehost/bin/dj_make_chroot
 -- 
 2.20.1
 

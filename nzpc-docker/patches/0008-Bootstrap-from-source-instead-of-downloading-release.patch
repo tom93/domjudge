@@ -9,18 +9,18 @@ Subject: Bootstrap from source instead of downloading release tarball in
  1 file changed, 9 insertions(+)
 
 diff --git a/docker/build.sh b/docker/build.sh
-index ce6454119..94dd8f1d5 100755
+index 14c07432e..2e9910e30 100755
 --- a/docker/build.sh
 +++ b/docker/build.sh
-@@ -8,6 +8,7 @@ then
- 	exit 1
- fi
+@@ -15,6 +15,7 @@ fi
+ 
+ VERSION="$1"
  
 +if false; then
  URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
  FILE=domjudge.tar.gz
  
-@@ -20,6 +21,14 @@ then
+@@ -27,6 +28,14 @@ then
  fi
  
  echo "[ok] DOMjudge version ${VERSION} downloaded as domjudge.tar.gz"; echo
@@ -33,8 +33,8 @@ index ce6454119..94dd8f1d5 100755
 +docker rmi --no-prune domjudge/dist:${VERSION}
 +echo "[ok] Done boostrapping"
  
- echo "[..] Building Docker image for domserver using intermediate build image..."
- docker build -t domjudge/domserver:${VERSION} -f domserver/Dockerfile .
+ echo "[..] Building Docker image for domserver..."
+ ./build-domjudge.sh "domjudge/domserver:${VERSION}"
 -- 
 2.20.1
 

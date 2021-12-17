@@ -10,10 +10,10 @@ dj_make_chroot which uses default-jre-headless.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/docker/judgehost/Dockerfile b/docker/judgehost/Dockerfile
-index 99b7ce8b5..a9f7e7d82 100644
+index a81cb3479..5ec91ffa8 100644
 --- a/docker/judgehost/Dockerfile
 +++ b/docker/judgehost/Dockerfile
-@@ -16,7 +16,7 @@ RUN apt-get update \
+@@ -17,7 +17,7 @@ RUN apt-get update \
  	acl zip unzip supervisor sudo procps libcgroup1 \
  	php-cli php-zip php-gd php-curl php-mysql php-json \
  	php-gmp php-xml php-mbstring python3 \

@@ -5,17 +5,17 @@ Subject: Copy docker/domserver/Dockerfile as
  docker/domserver/Dockerfile.source
 
 ---
- docker/domserver/Dockerfile.source | 95 ++++++++++++++++++++++++++++++
- 1 file changed, 95 insertions(+)
+ docker/domserver/Dockerfile.source | 94 ++++++++++++++++++++++++++++++
+ 1 file changed, 94 insertions(+)
  create mode 100644 docker/domserver/Dockerfile.source
 
 diff --git a/docker/domserver/Dockerfile.source b/docker/domserver/Dockerfile.source
 new file mode 100644
-index 000000000..b0880704a
+index 000000000..5b5534cb1
 --- /dev/null
 +++ b/docker/domserver/Dockerfile.source
-@@ -0,0 +1,95 @@
-+FROM debian:latest AS domserver-build
+@@ -0,0 +1,94 @@
++FROM debian:stable-slim AS domserver-build
 +MAINTAINER DOMjudge team <team@domjudge.org>
 +
 +ENV DEBIAN_FRONTEND=noninteractive
@@ -29,10 +29,9 @@ index 000000000..b0880704a
 +	php-gd php-curl php-mysql php-json php-intl \
 +	php-gmp php-xml php-mbstring \
 +	sudo bsdmainutils ntp libcgroup-dev procps \
-+	linuxdoc-tools linuxdoc-tools-text groff \
 +	python3-sphinx python3-sphinx-rtd-theme python3-pip fontconfig python3-yaml \
 +	texlive-latex-recommended texlive-latex-extra \
-+	texlive-fonts-recommended texlive-lang-european \
++	texlive-fonts-recommended texlive-lang-european latexmk \
 +	libcurl4-gnutls-dev libjsoncpp-dev libmagic-dev \
 +	enscript lpr ca-certificates \
 +	&& rm -rf /var/lib/apt/lists/*
@@ -44,9 +43,9 @@ index 000000000..b0880704a
 +RUN useradd -m domjudge
 +
 +# Install composer
-+ADD https://getcomposer.org/installer composer-setup.php
-+RUN php composer-setup.php \
-+    && mv /composer.phar /usr/local/bin/composer
++RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
++	&& php composer-setup.php \
++	&& mv /composer.phar /usr/local/bin/composer
 +
 +# Add DOMjudge source code
 +ADD domjudge.tar.gz /domjudge-src
@@ -54,11 +53,11 @@ index 000000000..b0880704a
 +	chown domjudge:domjudge {} +
 +
 +# Build and install domserver
-+ADD domserver/build.sh /domjudge-src
++COPY domserver/build.sh /domjudge-src/build.sh
 +RUN /domjudge-src/build.sh
 +
 +# Now create an image with the actual build in it
-+FROM debian:latest
++FROM debian:stable-slim
 +MAINTAINER DOMjudge team <team@domjudge.org>
 +
 +ENV DEBIAN_FRONTEND=noninteractive \
@@ -79,37 +78,37 @@ index 000000000..b0880704a
 +	php-gd php-curl php-mysql php-json php-intl \
 +	php-gmp php-xml php-mbstring php-ldap \
 +	enscript lpr \
++	ca-certificates python3-yaml \
 +	&& rm -rf /var/lib/apt/lists/*
 +
 +# Set up user
 +RUN useradd -m domjudge
 +
 +# Install composer
-+ADD https://getcomposer.org/installer composer-setup.php
-+RUN php composer-setup.php \
-+    && mv /composer.phar /usr/local/bin/composer
++RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
++	&& php composer-setup.php \
++	&& mv /composer.phar /usr/local/bin/composer
 +
-+# Copy domserver directory and add script files
++# Copy domserver
 +RUN mkdir /opt/domjudge && chown domjudge: /opt/domjudge
 +COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjudge/domserver
 +COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
-+COPY ["domserver/scripts", "/scripts/"]
 +
-+# Create PHP FPM socket dir, change permissions for some domjudge directories and fix scripts
-+RUN mkdir -p /run/php \
-+	&& chown -R www-data: /opt/domjudge/domserver/tmp \
-+	# for DOMjudge <= 7.2 (submitdir was removed in commit DOMjudge/domjudge@d66725038)
-+	&& if [ -d /opt/domjudge/domserver/submissions ]; then chown -R www-data: /opt/domjudge/domserver/submissions; fi \
-+	&& chmod 755 /scripts/start.sh \
-+	&& chmod 755 /scripts/bin/* \
-+	&& ln -s /scripts/bin/* /usr/bin/
-+CMD ["/scripts/start.sh"]
++# Copy scripts
++COPY domserver/scripts /scripts/
++COPY domserver/supervisor /etc/supervisor/conf.d/
 +
-+# Copy supervisor files
-+COPY ["domserver/supervisor", "/etc/supervisor/conf.d/"]
++# Make the scripts available to the root user
++ENV PATH="$PATH:/opt/domjudge/domserver/bin"
++
++# Run customizations
++COPY domserver/configure.sh /configure.sh
++RUN chmod 700 /configure.sh && /configure.sh && rm -f /configure.sh
 +
 +# Expose HTTP port
 +EXPOSE 80
++
++CMD ["/scripts/start.sh"]
 -- 
 2.20.1
 

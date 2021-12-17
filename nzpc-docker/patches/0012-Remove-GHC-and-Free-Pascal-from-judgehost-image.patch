@@ -8,10 +8,10 @@ Subject: Remove GHC and Free Pascal from judgehost image
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/docker/judgehost/Dockerfile b/docker/judgehost/Dockerfile
-index e5d05ffb0..eb8396737 100644
+index d776abb59..bf84901a8 100644
 --- a/docker/judgehost/Dockerfile
 +++ b/docker/judgehost/Dockerfile
-@@ -16,7 +16,7 @@ RUN apt-get update \
+@@ -17,7 +17,7 @@ RUN apt-get update \
  	acl zip unzip supervisor sudo procps libcgroup1 \
  	php-cli php-zip php-gd php-curl php-mysql php-json \
  	php-gmp php-xml php-mbstring python3 \
