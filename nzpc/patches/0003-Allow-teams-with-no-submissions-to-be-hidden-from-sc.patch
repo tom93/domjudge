@@ -1,0 +1,264 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 22 Mar 2020 01:08:48 +1300
+Subject: Allow teams with no submissions to be hidden from scoreboard
+
+---
+ etc/db-config.yaml                            |  5 +++
+ .../Controller/Jury/AnalysisController.php    |  7 ++++
+ .../src/Controller/Jury/ContestController.php |  2 ++
+ webapp/src/Entity/Contest.php                 | 34 ++++++++++++++++++
+ webapp/src/Form/Type/ContestType.php          |  8 +++++
+ .../src/Migrations/Version20200321110938.php  | 35 +++++++++++++++++++
+ webapp/src/Service/ScoreboardService.php      | 32 ++++++++++++++++-
+ webapp/templates/jury/contest.html.twig       |  4 +++
+ .../jury/partials/contest_form.html.twig      |  1 +
+ 9 files changed, 127 insertions(+), 1 deletion(-)
+ create mode 100644 webapp/src/Migrations/Version20200321110938.php
+
+diff --git a/etc/db-config.yaml b/etc/db-config.yaml
+index 78f9a2a2d..156a44297 100644
+--- a/etc/db-config.yaml
++++ b/etc/db-config.yaml
+@@ -192,6 +192,11 @@
+             default_value: true
+             public: true
+             description: Show problem columns with submission information on the public and team scoreboards?
++        -   name: show_teams_with_no_submissions
++            type: bool
++            default_value: true
++            public: true
++            description: Should teams that have not made any submissions be included in the scoreboards of new contests?
+         -   name: show_compile
+             type: int
+             default_value: 2
+diff --git a/webapp/src/Controller/Jury/AnalysisController.php b/webapp/src/Controller/Jury/AnalysisController.php
+index e3c16e95c..8c7828fc3 100644
+--- a/webapp/src/Controller/Jury/AnalysisController.php
++++ b/webapp/src/Controller/Jury/AnalysisController.php
+@@ -153,6 +153,13 @@ class AnalysisController extends AbstractController
+           $num_submissions[$r['teamid']] = $r['num_submissions'];
+         }
+ 
++        // Filter out teams with no submissions if desired
++        if (!$contest->isShowTeamsWithNoSubmissions()) {
++            $teams = array_filter($teams, function ($team) use ($num_submissions) {
++                return $num_submissions[$team->getTeamId()] ?? 0 > 0;
++            });
++        }
++
+ 
+         // Come up with misc stats
+         // find last correct judgement for a team, figure out how many minutes are left in the contest(or til now if now is earlier)
+diff --git a/webapp/src/Controller/Jury/ContestController.php b/webapp/src/Controller/Jury/ContestController.php
+index d589fcca5..0353ca451 100644
+--- a/webapp/src/Controller/Jury/ContestController.php
++++ b/webapp/src/Controller/Jury/ContestController.php
+@@ -637,6 +637,8 @@ class ContestController extends BaseController
+         $contest = new Contest();
+         // Set default activate time
+         $contest->setActivatetimeString(strftime('%Y-%m-%d %H:%M:00 ') . date_default_timezone_get());
++        // Set default value for showing teams with no submissions based on the corresponding configuration option
++        $contest->setShowTeamsWithNoSubmissions((bool)$this->config->get('show_teams_with_no_submissions'));
+ 
+         $form = $this->createForm(ContestType::class, $contest);
+ 
+diff --git a/webapp/src/Entity/Contest.php b/webapp/src/Entity/Contest.php
+index 6722e6092..de9f77167 100644
+--- a/webapp/src/Entity/Contest.php
++++ b/webapp/src/Entity/Contest.php
+@@ -278,6 +278,16 @@ class Contest extends BaseApiEntity
+      */
+     private $openToAllTeams = true;
+ 
++    /**
++     * @var boolean
++     * @ORM\Column(type="boolean", name="show_teams_with_no_submissions",
++     *     options={"comment"="Should teams that have not made any submissions be included in the scoreboard?",
++     *              "default"=1},
++     *     nullable=false)
++     * @Serializer\Exclude()
++     */
++    private $showTeamsWithNoSubmissions = true;
++
+     /**
+      * @ORM\ManyToMany(targetEntity="Team", inversedBy="contests")
+      * @ORM\JoinTable(name="contestteam",
+@@ -947,6 +957,30 @@ class Contest extends BaseApiEntity
+         return $this->openToAllTeams;
+     }
+ 
++    /**
++     * Set show teams with no submissions
++     *
++     * @param boolean $showTeamsWithNoSubmissions
++     *
++     * @return Contest
++     */
++    public function setShowTeamsWithNoSubmissions($showTeamsWithNoSubmissions)
++    {
++        $this->showTeamsWithNoSubmissions = $showTeamsWithNoSubmissions;
++
++        return $this;
++    }
++
++    /**
++     * Get show teams with no submissions
++     *
++     * @return boolean
++     */
++    public function isShowTeamsWithNoSubmissions()
++    {
++        return $this->showTeamsWithNoSubmissions;
++    }
++
+     /**
+      * Add team
+      *
+diff --git a/webapp/src/Form/Type/ContestType.php b/webapp/src/Form/Type/ContestType.php
+index bffa62f3a..5f30e3c62 100644
+--- a/webapp/src/Form/Type/ContestType.php
++++ b/webapp/src/Form/Type/ContestType.php
+@@ -94,6 +94,14 @@ class ContestType extends AbstractExternalIdEntityType
+                 return $category->getName();
+             },
+         ]);
++        $builder->add('showTeamsWithNoSubmissions', ChoiceType::class, [
++            'expanded' => true,
++            'label' => 'Show teams with no submissions',
++            'choices' => [
++                'Yes' => true,
++                'No' => false,
++            ],
++        ]);
+         $builder->add('enabled', ChoiceType::class, [
+             'expanded' => true,
+             'choices' => [
+diff --git a/webapp/src/Migrations/Version20200321110938.php b/webapp/src/Migrations/Version20200321110938.php
+new file mode 100644
+index 000000000..ecfcaa31c
+--- /dev/null
++++ b/webapp/src/Migrations/Version20200321110938.php
+@@ -0,0 +1,35 @@
++<?php
++
++declare(strict_types=1);
++
++namespace DoctrineMigrations;
++
++use Doctrine\DBAL\Schema\Schema;
++use Doctrine\Migrations\AbstractMigration;
++
++/**
++ * Auto-generated Migration: Please modify to your needs!
++ */
++final class Version20200321110938 extends AbstractMigration
++{
++    public function getDescription() : string
++    {
++        return 'add flag to filter teams with no submissions in contests';
++    }
++
++    public function up(Schema $schema) : void
++    {
++        // this up() migration is auto-generated, please modify it to your needs
++        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
++
++        $this->addSql('ALTER TABLE contest ADD show_teams_with_no_submissions TINYINT(1) DEFAULT \'1\' NOT NULL COMMENT \'Should teams that have not made any submissions be included in the scoreboard?\'');
++    }
++
++    public function down(Schema $schema) : void
++    {
++        // this down() migration is auto-generated, please modify it to your needs
++        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
++
++        $this->addSql('ALTER TABLE contest DROP show_teams_with_no_submissions');
++    }
++}
+diff --git a/webapp/src/Service/ScoreboardService.php b/webapp/src/Service/ScoreboardService.php
+index e19a44edd..cd0972608 100644
+--- a/webapp/src/Service/ScoreboardService.php
++++ b/webapp/src/Service/ScoreboardService.php
+@@ -768,6 +768,8 @@ class ScoreboardService
+             }
+         }
+ 
++        $scoreFilter['teams'] = []; // forbidden because it bypasses the flag that hides teams with no submissions
++
+         $this->dj->setCookie(
+             'domjudge_scorefilter',
+             $this->dj->jsonEncode($scoreFilter),
+@@ -886,7 +888,19 @@ class ScoreboardService
+                     ->join('t.category', 'cat')
+                     ->leftJoin('cat.contests', 'cc')
+                     ->andWhere('c = :contest OR cc = :contest')
+-                    ->setParameter(':contest', $contest);
++                    ->setParameter('contest', $contest);
++                // avoid colon in parameter name that is set twice because of Doctrine ORM issue #8106
++            }
++            if (!$contest->isShowTeamsWithNoSubmissions()) {
++                $attemptedQuery = $this->em->createQueryBuilder()
++                    ->from(ScoreCache::class, 's')
++                    ->select('1')
++                    ->andWhere('s.contest = :contest')
++                    ->andWhere('s.team = t')
++                    ->andWhere('s.submissions_public + s.pending_public > 0');
++                $queryBuilder
++                    ->andWhere($queryBuilder->expr()->exists($attemptedQuery->getDql()))
++                    ->setParameter('contest', $contest);
+             }
+ 
+             /** @var TeamAffiliation[] $affiliations */
+@@ -996,6 +1010,22 @@ class ScoreboardService
+                 ->setParameter(':cid', $contest->getCid());
+         }
+ 
++        if (!$contest->isShowTeamsWithNoSubmissions()) {
++            if ($filter && $filter->teams) {
++                // specific teams requested (e.g. for team's summary); show them even if they have no submissions
++            } else {
++                $attemptedQuery = $this->em->createQueryBuilder()
++                    ->from(ScoreCache::class, 's')
++                    ->select('1')
++                    ->andWhere('s.contest = :contest')
++                    ->andWhere('s.team = t')
++                    ->andWhere('s.submissions_public + s.pending_public > 0');
++                $queryBuilder
++                    ->andWhere($queryBuilder->expr()->exists($attemptedQuery->getDql()))
++                    ->setParameter(':contest', $contest);
++            }
++        }
++
+         if (!$jury) {
+             $queryBuilder->andWhere('tc.visible = 1');
+         }
+diff --git a/webapp/templates/jury/contest.html.twig b/webapp/templates/jury/contest.html.twig
+index d3a1cb051..e6e0a0434 100644
+--- a/webapp/templates/jury/contest.html.twig
++++ b/webapp/templates/jury/contest.html.twig
+@@ -113,6 +113,10 @@
+                         {% endif %}
+                     </td>
+                 </tr>
++                <tr>
++                    <th>Show teams with no submissions</th>
++                    <td>{{ contest.showTeamsWithNoSubmissions | printYesNo }}</td>
++                </tr>
+             </table>
+         </div>
+     </div>
+diff --git a/webapp/templates/jury/partials/contest_form.html.twig b/webapp/templates/jury/partials/contest_form.html.twig
+index 048a1927d..7f5b7a23d 100644
+--- a/webapp/templates/jury/partials/contest_form.html.twig
++++ b/webapp/templates/jury/partials/contest_form.html.twig
+@@ -24,6 +24,7 @@
+             {{ form_row(form.teams) }}
+             {{ form_row(form.teamCategories) }}
+         </div>
++        {{ form_row(form.showTeamsWithNoSubmissions) }}
+         {{ form_row(form.enabled) }}
+     </div>
+     <div class="col-lg-4">
+-- 
+2.20.1
+

@@ -1,0 +1,94 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 18 Aug 2020 04:47:50 +1200
+Subject: Add organization TSV export (non-standard format)
+
+---
+ .../Jury/ImportExportController.php           | 11 ++++++++--
+ webapp/src/Service/ImportExportService.php    | 20 +++++++++++++++++++
+ webapp/templates/jury/import_export.html.twig |  2 +-
+ 3 files changed, 30 insertions(+), 3 deletions(-)
+
+diff --git a/webapp/src/Controller/Jury/ImportExportController.php b/webapp/src/Controller/Jury/ImportExportController.php
+index aaf93a110..ebcb9526a 100644
+--- a/webapp/src/Controller/Jury/ImportExportController.php
++++ b/webapp/src/Controller/Jury/ImportExportController.php
+@@ -244,7 +244,7 @@ class ImportExportController extends BaseController
+     }
+ 
+     /**
+-     * @Route("/export/{type<groups|teams|scoreboard|results>}.tsv", name="jury_tsv_export")
++     * @Route("/export/{type<groups|organizations-nzpc|teams|scoreboard|results>}.tsv", name="jury_tsv_export")
+      * @param Request $request
+      * @param string  $type
+      * @return RedirectResponse|StreamedResponse
+@@ -259,6 +259,9 @@ class ImportExportController extends BaseController
+                 case 'groups':
+                     $data = $this->importExportService->getGroupData();
+                     break;
++                case 'organizations-nzpc':
++                    $data = $this->importExportService->getOrganizationNzpcData();
++                    break;
+                 case 'teams':
+                     $data = $this->importExportService->getTeamData();
+                     break;
+@@ -277,7 +280,11 @@ class ImportExportController extends BaseController
+ 
+         $response = new StreamedResponse();
+         $response->setCallback(function () use ($type, $version, $data) {
+-            echo sprintf("%s\t%s\n", $type, $version);
++            if ($type === 'organizations-nzpc') {
++                // In this format the tsv does not contain a version line.
++            } else {
++                echo sprintf("%s\t%s\n", $type, $version);
++            }
+             // output the rows, escaping any reserved characters in the data
+             foreach ($data as $row) {
+                 echo implode("\t", array_map(function ($field) {
+diff --git a/webapp/src/Service/ImportExportService.php b/webapp/src/Service/ImportExportService.php
+index 4fcb55fdb..8bb1eedff 100644
+--- a/webapp/src/Service/ImportExportService.php
++++ b/webapp/src/Service/ImportExportService.php
+@@ -299,6 +299,26 @@ class ImportExportService
+         return $data;
+     }
+ 
++    /**
++     * Get organization data (NZPC format)
++     * @return array
++     */
++    public function getOrganizationNzpcData(): array
++    {
++        /** @var TeamAffiliation[] $affiliations */
++        $affiliations = $this->em->getRepository(TeamAffiliation::class)->findBy([], ['name' => 'ASC']);
++
++        $data = [];
++        foreach ($affiliations as $affiliation) {
++            $data[] = [
++                $affiliation->getShortname(),
++                $affiliation->getName(),
++            ];
++        }
++
++        return $data;
++    }
++
+     /**
+      * Get team data
+      * @return array
+diff --git a/webapp/templates/jury/import_export.html.twig b/webapp/templates/jury/import_export.html.twig
+index d02556c31..06039bfb0 100644
+--- a/webapp/templates/jury/import_export.html.twig
++++ b/webapp/templates/jury/import_export.html.twig
+@@ -14,7 +14,7 @@
+         <li>
+             Tab separated, export:
+             <ul>
+-                {% for type in ['groups', 'teams', 'scoreboard'] %}
++                {% for type in ['groups', 'organizations-nzpc', 'teams', 'scoreboard'] %}
+                     <li>
+                         <a href="{{ path('jury_tsv_export', {'type': type}) }}"><code>{{ type }}.tsv</code></a>
+                     </li>
+-- 
+2.20.1
+

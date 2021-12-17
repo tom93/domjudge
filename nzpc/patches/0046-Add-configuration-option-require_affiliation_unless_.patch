@@ -1,0 +1,64 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sat, 4 Sep 2021 22:56:04 +1200
+Subject: Add configuration option 'require_affiliation_unless_open'
+
+Background: In the NZPC we have an "Open" category which anyone can
+compete in, and we have "School" and "Tertiary" categories for
+students enrolled in an institution. So teams that don't select an
+institution (affiliation) are not eligible for the "School" or
+"Tertiary" categories and need to register in the "Open" category.
+
+When this configuration option is enabled, it requires teams to select
+an affiliation during self-registration, unless they register in the
+"Open" category.
+
+This option only applies if the "Open" category actually exists.
+---
+ etc/db-config.yaml                            |  5 +++++
+ webapp/src/Form/Type/UserRegistrationType.php | 13 +++++++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/etc/db-config.yaml b/etc/db-config.yaml
+index 3f4139ea3..80c70e28e 100644
+--- a/etc/db-config.yaml
++++ b/etc/db-config.yaml
+@@ -207,6 +207,11 @@
+             default_value: true
+             public: true
+             description: Allow teams to create new affiliations during self-registration?
++        -   name: require_affiliation_unless_open
++            type: bool
++            default_value: false
++            public: true
++            description: Require teams to select an affiliation during self-registration, unless they register in the "Open" category. (Only applies if the "Open" category exists.)
+         -   name: show_team_managers
+             type: bool
+             default_value: false
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index 6a41b20f0..ca76945d5 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -311,6 +311,19 @@ class UserRegistrationType extends AbstractType
+                             ->addViolation();
+                     }
+                 }
++                if ((bool)$this->config->get('require_affiliation_unless_open')) {
++                    if ($form->get('affiliation')->getData() === 'none') {
++                        $teamCategoryField = $form->has('teamCategory') ? $form->get('teamCategory') : null; // field will not exist if there is only one category
++                        $teamCategory = $teamCategoryField ? $teamCategoryField->getData() : null; // category will be null if field wasn't filled in
++                        if ($teamCategory && $teamCategory->getName() !== 'Open') {
++                            if ($this->em->getRepository(TeamCategory::class)->count(['name' => 'Open', 'allow_self_registration' => 1]) > 0) {
++                                $context->buildViolation(sprintf("This affiliation is not eligible for the '%s' category. Please switch to the 'Open' category, or choose a different affiliation.", $teamCategory->getName()))
++                                    ->atPath('affiliation')
++                                    ->addViolation();
++                            }
++                        }
++                    }
++                }
+             }
+         };
+         $resolver->setDefaults(
+-- 
+2.20.1
+

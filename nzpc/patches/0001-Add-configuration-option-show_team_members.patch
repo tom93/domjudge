@@ -1,0 +1,109 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Wed, 18 Mar 2020 23:29:58 +1300
+Subject: Add configuration option 'show_team_members'
+
+Default to true, which matches the existing behaviour.
+
+This configuration option will be used to control the upcoming team
+members field in the registration form.
+---
+ etc/db-config.yaml                                  | 5 +++++
+ webapp/src/Controller/Jury/TeamController.php       | 1 +
+ webapp/src/Controller/PublicController.php          | 2 ++
+ webapp/src/Controller/Team/ScoreboardController.php | 2 ++
+ webapp/templates/jury/team.html.twig                | 2 +-
+ webapp/templates/partials/team.html.twig            | 2 +-
+ 6 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/etc/db-config.yaml b/etc/db-config.yaml
+index fb4505923..78f9a2a2d 100644
+--- a/etc/db-config.yaml
++++ b/etc/db-config.yaml
+@@ -167,6 +167,11 @@
+             default_value: true
+             public: true
+             description: Show pending submissions on the scoreboard?
++        -   name: show_team_members
++            type: bool
++            default_value: true
++            public: true
++            description: Show team members in the interfaces?
+         -   name: show_flags
+             type: bool
+             default_value: true
+diff --git a/webapp/src/Controller/Jury/TeamController.php b/webapp/src/Controller/Jury/TeamController.php
+index 51e677b4e..12319b5cd 100644
+--- a/webapp/src/Controller/Jury/TeamController.php
++++ b/webapp/src/Controller/Jury/TeamController.php
+@@ -287,6 +287,7 @@ class TeamController extends BaseController
+                 'ajax' => true,
+             ],
+             'team' => $team,
++            'showTeamMembers' => (bool)$this->config->get('show_team_members'),
+             'showAffiliations' => (bool)$this->config->get('show_affiliations'),
+             'showFlags' => (bool)$this->config->get('show_flags'),
+             'showContest' => count($this->dj->getCurrentContests()) > 1,
+diff --git a/webapp/src/Controller/PublicController.php b/webapp/src/Controller/PublicController.php
+index 603661585..5e3c50089 100644
+--- a/webapp/src/Controller/PublicController.php
++++ b/webapp/src/Controller/PublicController.php
+@@ -158,10 +158,12 @@ class PublicController extends BaseController
+     public function teamAction(Request $request, int $teamId)
+     {
+         $team             = $this->em->getRepository(Team::class)->find($teamId);
++        $showTeamMembers  = (bool)$this->config->get('show_team_members');
+         $showFlags        = (bool)$this->config->get('show_flags');
+         $showAffiliations = (bool)$this->config->get('show_affiliations');
+         $data             = [
+             'team' => $team,
++            'showTeamMembers' => $showTeamMembers,
+             'showFlags' => $showFlags,
+             'showAffiliations' => $showAffiliations,
+         ];
+diff --git a/webapp/src/Controller/Team/ScoreboardController.php b/webapp/src/Controller/Team/ScoreboardController.php
+index 167d1d5f0..42e64ffcb 100644
+--- a/webapp/src/Controller/Team/ScoreboardController.php
++++ b/webapp/src/Controller/Team/ScoreboardController.php
+@@ -99,10 +99,12 @@ class ScoreboardController extends BaseController
+     public function teamAction(Request $request, int $teamId)
+     {
+         $team             = $this->em->getRepository(Team::class)->find($teamId);
++        $showTeamMembers  = (bool)$this->config->get('show_team_members');
+         $showFlags        = (bool)$this->config->get('show_flags');
+         $showAffiliations = (bool)$this->config->get('show_affiliations');
+         $data             = [
+             'team' => $team,
++            'showTeamMembers' => $showTeamMembers,
+             'showFlags' => $showFlags,
+             'showAffiliations' => $showAffiliations,
+         ];
+diff --git a/webapp/templates/jury/team.html.twig b/webapp/templates/jury/team.html.twig
+index 6f45f2614..a1ecd80fd 100644
+--- a/webapp/templates/jury/team.html.twig
++++ b/webapp/templates/jury/team.html.twig
+@@ -150,7 +150,7 @@
+                     </td>
+                 </tr>
+                 {% endif %}
+-                {% if team.members is not empty %}
++                {% if showTeamMembers and team.members is not empty %}
+                     <tr>
+                         <th>Members</th>
+                         <td>{{ team.members | nl2br }}</td>
+diff --git a/webapp/templates/partials/team.html.twig b/webapp/templates/partials/team.html.twig
+index 0e7674f2f..530de1332 100644
+--- a/webapp/templates/partials/team.html.twig
++++ b/webapp/templates/partials/team.html.twig
+@@ -15,7 +15,7 @@
+                     <th>Category</th>
+                     <td>{{ team.category.name }}</td>
+                 </tr>
+-                {% if team.members is not empty %}
++                {% if showTeamMembers and team.members is not empty %}
+                     <tr>
+                         <th>Members</th>
+                         <td>{{ team.members | nl2br }}</td>
+-- 
+2.20.1
+

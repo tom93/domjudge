@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 5 Sep 2021 21:12:36 +1200
+Subject: Set 'require_affiliation_unless_open' to true in nzpc:configure
+
+Teams are only eligible to compete in the School and Tertiary
+categories if they are enrolled in an institution.
+---
+ webapp/src/Command/NZPCConfigureCommand.php | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/webapp/src/Command/NZPCConfigureCommand.php b/webapp/src/Command/NZPCConfigureCommand.php
+index ef50ca004..4c7133f83 100644
+--- a/webapp/src/Command/NZPCConfigureCommand.php
++++ b/webapp/src/Command/NZPCConfigureCommand.php
+@@ -200,6 +200,7 @@ EOF
+         $this->logger->notice('Setting configuration options for NZPC');
+         $this->doConfigure('show_flags', false); // hides "Affiliation country" field during registration
+         $this->doConfigure('show_new_affiliation_option', false);
++        $this->doConfigure('require_affiliation_unless_open', true); // prevents School/Tertiary teams from choosing "No affiliation" during registration
+         $this->doConfigure('show_user_emails', false);
+         $this->doConfigure('show_team_managers', true);
+         $this->doConfigure('show_team_manager_emails', true);
+-- 
+2.20.1
+

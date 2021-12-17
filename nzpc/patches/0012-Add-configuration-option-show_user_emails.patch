@@ -1,0 +1,127 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 29 Mar 2020 01:57:26 +1300
+Subject: Add configuration option 'show_user_emails'
+
+Default to true, which matches the existing behaviour.
+---
+ etc/db-config.yaml                            |  5 +++++
+ webapp/src/Controller/Jury/UserController.php | 11 ++++++++--
+ webapp/src/Form/Type/UserRegistrationType.php | 22 +++++++++++--------
+ webapp/templates/jury/user.html.twig          | 22 ++++++++++---------
+ 4 files changed, 39 insertions(+), 21 deletions(-)
+
+diff --git a/etc/db-config.yaml b/etc/db-config.yaml
+index 23dfed1b8..435f6599d 100644
+--- a/etc/db-config.yaml
++++ b/etc/db-config.yaml
+@@ -167,6 +167,11 @@
+             default_value: true
+             public: true
+             description: Show pending submissions on the scoreboard?
++        -   name: show_user_emails
++            type: bool
++            default_value: true
++            public: true
++            description: Show user email addresses in the interfaces?
+         -   name: show_team_members
+             type: bool
+             default_value: true
+diff --git a/webapp/src/Controller/Jury/UserController.php b/webapp/src/Controller/Jury/UserController.php
+index ca68fd1ca..768cafcce 100644
+--- a/webapp/src/Controller/Jury/UserController.php
++++ b/webapp/src/Controller/Jury/UserController.php
+@@ -104,7 +104,11 @@ class UserController extends BaseController
+         $table_fields = [
+             'username' => ['title' => 'username', 'sort' => true, 'default_sort' => true],
+             'name' => ['title' => 'name', 'sort' => true],
+-            'email' => ['title' => 'email', 'sort' => true],
++        ];
++        if ($this->config->get('show_user_emails')) {
++            $table_fields['email'] = ['title' => 'email', 'sort' => true];
++        }
++        $table_fields += [
+             'user_roles' => ['title' => 'roles', 'sort' => true],
+             'team' => ['title' => 'team', 'sort' => true],
+             'status' => ['title' => '', 'sort' => true],
+@@ -204,7 +208,10 @@ class UserController extends BaseController
+             throw new NotFoundHttpException(sprintf('User with ID %s not found', $userId));
+         }
+ 
+-        return $this->render('jury/user.html.twig', ['user' => $user]);
++        return $this->render('jury/user.html.twig', [
++            'user' => $user,
++            'showUserEmails' => (bool)$this->config->get('show_user_emails'),
++        ]);
+     }
+ 
+     /**
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index f4e6aedfc..2e80badb3 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -73,15 +73,19 @@ class UserRegistrationType extends AbstractType
+                 'attr' => [
+                     'placeholder' => 'Username',
+                 ],
+-            ])
+-            ->add('email', EmailType::class, [
+-                'label' => false,
+-                'required' => false,
+-                'attr' => [
+-                    'placeholder' => 'Email address (optional)',
+-                ],
+-                'constraints' => new Email(),
+-            ])
++            ]);
++        if ($this->config->get('show_user_emails')) {
++            $builder
++                ->add('email', EmailType::class, [
++                    'label' => false,
++                    'required' => false,
++                    'attr' => [
++                        'placeholder' => 'Email address (optional)',
++                    ],
++                    'constraints' => new Email(),
++                ]);
++        }
++        $builder
+             ->add('teamName', TextType::class, [
+                 'label' => false,
+                 'attr' => [
+diff --git a/webapp/templates/jury/user.html.twig b/webapp/templates/jury/user.html.twig
+index 562af3a8f..f587c9d0b 100644
+--- a/webapp/templates/jury/user.html.twig
++++ b/webapp/templates/jury/user.html.twig
+@@ -27,16 +27,18 @@
+                     <th>Name</th>
+                     <td>{{ user.name }}</td>
+                 </tr>
+-                <tr>
+-                    <th>Email</th>
+-                    <td>
+-                        {% if user.email %}
+-                            <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+-                        {% else %}
+-                            -
+-                        {% endif %}
+-                    </td>
+-                </tr>
++                {% if showUserEmails %}
++                    <tr>
++                        <th>Email</th>
++                        <td>
++                            {% if user.email %}
++                                <a href="mailto:{{ user.email }}">{{ user.email }}</a>
++                            {% else %}
++                                -
++                            {% endif %}
++                        </td>
++                    </tr>
++                {% endif %}
+                 <tr>
+                     <th>Password</th>
+                     <td>
+-- 
+2.20.1
+

@@ -1,0 +1,233 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Mon, 16 Mar 2020 16:33:45 +1300
+Subject: Combine existing affiliations and "none" / "add new" in a single
+ dropdown
+
+---
+ webapp/src/Controller/SecurityController.php  | 30 +++----
+ webapp/src/Form/Type/UserRegistrationType.php | 80 ++++++++++---------
+ webapp/templates/security/register.html.twig  | 41 +++-------
+ 3 files changed, 70 insertions(+), 81 deletions(-)
+
+diff --git a/webapp/src/Controller/SecurityController.php b/webapp/src/Controller/SecurityController.php
+index cf264d320..43c2ebc8e 100644
+--- a/webapp/src/Controller/SecurityController.php
++++ b/webapp/src/Controller/SecurityController.php
+@@ -158,22 +158,22 @@ class SecurityController extends AbstractController
+             }
+ 
+             if ($this->config->get('show_affiliations')) {
+-                switch ($registration_form->get('affiliation')->getData()) {
+-                    case 'new':
+-                        $affiliation = new TeamAffiliation();
+-                        $affiliation
+-                            ->setName($registration_form->get('affiliationName')->getData())
+-                            ->setShortname($registration_form->get('affiliationName')->getData());
+-                        if ($registration_form->has('affiliationCountry')) {
+-                            $affiliation->setCountry($registration_form->get('affiliationCountry')->getData());
+-                        }
+-                        $team->setAffiliation($affiliation);
+-                        $em->persist($affiliation);
+-                        break;
+-                    case 'existing':
+-                        $team->setAffiliation($registration_form->get('existingAffiliation')->getData());
+-                        break;
++                $affiliationData = $registration_form->get('affiliation')->getData();
++                if ($affiliationData === 'none') {
++                    $affiliation = null;
++                } elseif ($affiliationData === 'new') {
++                    $affiliation = new TeamAffiliation();
++                    $affiliation
++                        ->setName($registration_form->get('affiliationName')->getData())
++                        ->setShortname($registration_form->get('affiliationName')->getData());
++                    if ($registration_form->has('affiliationCountry')) {
++                        $affiliation->setCountry($registration_form->get('affiliationCountry')->getData());
++                    }
++                    $em->persist($affiliation);
++                } else {
++                    $affiliation = $affiliationData;
+                 }
++                $team->setAffiliation($affiliation);
+             }
+ 
+             $em->persist($user);
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index 31ec5a657..3aa4f561c 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -137,12 +137,15 @@ class UserRegistrationType extends AbstractType
+         }
+ 
+         if ($this->config->get('show_affiliations')) {
+-            $affiliationChoices = [];
+-            $affiliationChoices['No affiliation'] = 'none';
++            $specialAffiliationChoices = [];
++            $specialAffiliationChoices['No affiliation'] = 'none';
+             if ($this->config->get('show_new_affiliation_option')) {
+-                $affiliationChoices['Add new affiliation'] = 'new';
++                $specialAffiliationChoices['Add new affiliation'] = 'new';
++            }
++            $affiliations = [];
++            foreach ($this->em->getRepository(TeamAffiliation::class)->findAll() as $affiliation) {
++                $affiliations[$affiliation->getName()] = $affiliation;
+             }
+-            $affiliationChoices['Use existing affiliation'] = 'existing';
+ 
+             $countries = [];
+             foreach (Utils::ALPHA3_COUNTRIES as $alpha3 => $country) {
+@@ -151,10 +154,31 @@ class UserRegistrationType extends AbstractType
+ 
+             $builder
+                 ->add('affiliation', ChoiceType::class, [
+-                    'choices' => $affiliationChoices,
+-                    'expanded' => true,
++                    // Note: it is important that $specialAffiliationChoices takes precedence over user-created affiliations with the same names
++                    'choices' => $specialAffiliationChoices + $affiliations,
++                    'preferred_choices' => array_values($specialAffiliationChoices),
+                     'mapped' => false,
+                     'label' => false,
++                    'placeholder' => '-- Select affiliation --',
++                    'choice_value' => function ($choice) {
++                        if ($choice === null) {
++                            return '';
++                        } elseif (is_string($choice)) {
++                            return $choice;
++                        } else {
++                            return (string)$choice->getAffilid();
++                        }
++                    },
++                    'choice_attr' => function ($choice, $key, $value) {
++                        if ($choice === 'new') {
++                            // use 'data-id' instead of 'id' because of Symfony issue #20965
++                            return ['data-id' => 'user_registration_affiliation_new'];
++                        }
++                        return [];
++                    },
++                    'constraints' => [
++                        new NotBlank(),
++                    ],
+                 ]);
+             if ($this->config->get('show_new_affiliation_option')) {
+                 $builder->add('affiliationName', TextType::class, [
+@@ -175,17 +199,6 @@ class UserRegistrationType extends AbstractType
+                     ]);
+                 }
+             }
+-            $builder->add('existingAffiliation', EntityType::class, [
+-                    'class' => TeamAffiliation::class,
+-                    'label' => false,
+-                    'required' => false,
+-                    'mapped' => false,
+-                    'choice_label' => 'name',
+-                    'placeholder' => '-- Select affiliation --',
+-                    'attr' => [
+-                        'placeholder' => 'Affiliation',
+-                    ],
+-                ]);
+         }
+ 
+         $builder
+@@ -226,27 +239,18 @@ class UserRegistrationType extends AbstractType
+             if ($this->config->get('show_affiliations')) {
+                 /** @var Form $form */
+                 $form = $context->getRoot();
+-                switch ($form->get('affiliation')->getData()) {
+-                    case 'new':
+-                        $affiliationName = $form->get('affiliationName')->getData();
+-                        if (empty($affiliationName)) {
+-                            $context->buildViolation('This value should not be blank.')
+-                                ->atPath('affiliationName')
+-                                ->addViolation();
+-                        }
+-                        if ($this->em->getRepository(TeamAffiliation::class)->findOneBy(['name' => $affiliationName])) {
+-                            $context->buildViolation('This affiliation name is already in use.')
+-                                ->atPath('affiliationName')
+-                                ->addViolation();
+-                        }
+-                        break;
+-                    case 'existing':
+-                        if (empty($form->get('existingAffiliation')->getData())) {
+-                            $context->buildViolation('This value should not be blank.')
+-                                ->atPath('existingAffiliation')
+-                                ->addViolation();
+-                        }
+-                        break;
++                if ($form->get('affiliation')->getData() === 'new') {
++                    $affiliationName = $form->get('affiliationName')->getData();
++                    if (empty($affiliationName)) {
++                        $context->buildViolation('This value should not be blank.')
++                            ->atPath('affiliationName')
++                            ->addViolation();
++                    }
++                    if ($this->em->getRepository(TeamAffiliation::class)->findOneBy(['name' => $affiliationName])) {
++                        $context->buildViolation('This affiliation name is already in use.')
++                            ->atPath('affiliationName')
++                            ->addViolation();
++                    }
+                 }
+             }
+         };
+diff --git a/webapp/templates/security/register.html.twig b/webapp/templates/security/register.html.twig
+index 9d78b2b99..9063ee1b9 100644
+--- a/webapp/templates/security/register.html.twig
++++ b/webapp/templates/security/register.html.twig
+@@ -25,42 +25,27 @@
+ {% block extrafooter %}
+     <script>
+         $(function () {
+-            $('#user_registration_existingAffiliation').select2();
++            var $affiliation = $('#user_registration_affiliation');
+ 
+-            var $affiliationRadios = $('[name="user_registration[affiliation]"]');
++            $affiliation.select2();
+ 
+-            if ($affiliationRadios.length) {
+-                $affiliationRadios.on('change', function () {
++            var $affiliationNew = $('[data-id="user_registration_affiliation_new"]');
++
++            if ($affiliation.length && $affiliationNew.length) {
++                $affiliation.on('change', function () {
+                     var $affiliationNameGroup = $('#user_registration_affiliationName').closest('.form-group');
+                     var $affiliationCountryGroup = $('#user_registration_affiliationCountry').closest('.form-group');
+-                    var $existingAffiliationGroup = $('#user_registration_existingAffiliation').closest('.form-group');
+-                    var value = $affiliationRadios.filter(':checked').val();
+ 
+-                    switch (value) {
+-                        case 'none':
+-                            $affiliationNameGroup.hide();
+-                            $affiliationCountryGroup.hide();
+-                            $existingAffiliationGroup.hide();
+-                            break;
+-                        case 'new':
+-                            $affiliationNameGroup.show();
+-                            $affiliationCountryGroup.show();
+-                            $existingAffiliationGroup.hide();
+-                            break;
+-                        case 'existing':
+-                            $affiliationNameGroup.hide();
+-                            $affiliationCountryGroup.hide();
+-                            $existingAffiliationGroup.show();
+-                            break;
++                    if ($affiliationNew.is(':selected')) {
++                        $affiliationNameGroup.show();
++                        $affiliationCountryGroup.show();
++                    } else {
++                        $affiliationNameGroup.hide();
++                        $affiliationCountryGroup.hide();
+                     }
+                 });
+ 
+-                var $checkedRadio = $affiliationRadios.filter(':checked');
+-                if ($checkedRadio.length === 0) {
+-                    $affiliationRadios.first().prop('checked', true);
+-                }
+-
+-                $affiliationRadios.change();
++                $affiliation.change();
+             }
+         });
+     </script>
+-- 
+2.20.1
+

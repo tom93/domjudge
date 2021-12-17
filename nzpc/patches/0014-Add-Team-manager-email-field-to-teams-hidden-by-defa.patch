@@ -1,0 +1,237 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 29 Mar 2020 03:49:51 +1300
+Subject: Add "Team manager email" field to teams (hidden by default)
+
+It can be enabled using the new configuration option
+'show_team_manager_emails'.
+---
+ etc/db-config.yaml                            |  5 +++
+ webapp/src/Controller/Jury/TeamController.php |  1 +
+ webapp/src/Controller/SecurityController.php  |  3 ++
+ webapp/src/Entity/Team.php                    | 33 +++++++++++++++++
+ webapp/src/Form/Type/TeamType.php             |  5 +++
+ webapp/src/Form/Type/UserRegistrationType.php | 11 ++++++
+ .../src/Migrations/Version20200328143509.php  | 35 +++++++++++++++++++
+ .../jury/partials/team_form.html.twig         |  1 +
+ webapp/templates/jury/team.html.twig          | 12 +++++++
+ 9 files changed, 106 insertions(+)
+ create mode 100644 webapp/src/Migrations/Version20200328143509.php
+
+diff --git a/etc/db-config.yaml b/etc/db-config.yaml
+index 1daffd79d..722b91165 100644
+--- a/etc/db-config.yaml
++++ b/etc/db-config.yaml
+@@ -202,6 +202,11 @@
+             default_value: false
+             public: true
+             description: Show team manager name in the interfaces?
++        -   name: show_team_manager_emails
++            type: bool
++            default_value: false
++            public: true
++            description: Show team manager email addresses in the interfaces?
+         -   name: show_teams_submissions
+             type: bool
+             default_value: true
+diff --git a/webapp/src/Controller/Jury/TeamController.php b/webapp/src/Controller/Jury/TeamController.php
+index 92a9b77d1..f343bff6f 100644
+--- a/webapp/src/Controller/Jury/TeamController.php
++++ b/webapp/src/Controller/Jury/TeamController.php
+@@ -292,6 +292,7 @@ class TeamController extends BaseController
+             'showAffiliations' => (bool)$this->config->get('show_affiliations'),
+             'showFlags' => (bool)$this->config->get('show_flags'),
+             'showTeamManagers' => (bool)$this->config->get('show_team_managers'),
++            'showTeamManagerEmails' => (bool)$this->config->get('show_team_manager_emails'),
+             'showContest' => count($this->dj->getCurrentContests()) > 1,
+             'maxWidth' => $this->config->get("team_column_width"),
+         ];
+diff --git a/webapp/src/Controller/SecurityController.php b/webapp/src/Controller/SecurityController.php
+index 48310dff3..3572d8098 100644
+--- a/webapp/src/Controller/SecurityController.php
++++ b/webapp/src/Controller/SecurityController.php
+@@ -156,6 +156,9 @@ class SecurityController extends AbstractController
+             if ($this->config->get('show_team_managers')) {
+                 $team->setTeamManagerName($registration_form->get('teamManagerName')->getData());
+             }
++            if ($this->config->get('show_team_manager_emails')) {
++                $team->setTeamManagerEmail($registration_form->get('teamManagerEmail')->getData());
++            }
+ 
+             if ($this->config->get('show_team_members')) {
+                 $team->setMembers($registration_form->get('members')->getData());
+diff --git a/webapp/src/Entity/Team.php b/webapp/src/Entity/Team.php
+index c073d874d..d710b08e7 100644
+--- a/webapp/src/Entity/Team.php
++++ b/webapp/src/Entity/Team.php
+@@ -82,6 +82,15 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
+      */
+     private $team_manager_name;
+ 
++    /**
++     * @var string
++     * @ORM\Column(type="string", name="team_manager_email", length=255, options={"comment"="Team manager email", "collation"="utf8mb4_bin"},
++     *                            nullable=true)
++     * @Serializer\Exclude()
++     * @Assert\Email()
++     */
++    private $team_manager_email;
++
+     /**
+      * @var boolean
+      * @ORM\Column(type="boolean", name="enabled",
+@@ -370,6 +379,30 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
+         return $this->team_manager_name;
+     }
+ 
++    /**
++     * Set team manager email
++     *
++     * @param string $teamManagerEmail
++     *
++     * @return Team
++     */
++    public function setTeamManagerEmail($teamManagerEmail)
++    {
++        $this->team_manager_email = $teamManagerEmail;
++
++        return $this;
++    }
++
++    /**
++     * Get team manager email
++     *
++     * @return string
++     */
++    public function getTeamManagerEmail()
++    {
++        return $this->team_manager_email;
++    }
++
+     /**
+      * Set enabled
+      *
+diff --git a/webapp/src/Form/Type/TeamType.php b/webapp/src/Form/Type/TeamType.php
+index af93d3bed..98ce71410 100644
+--- a/webapp/src/Form/Type/TeamType.php
++++ b/webapp/src/Form/Type/TeamType.php
+@@ -12,6 +12,7 @@ use Symfony\Component\Form\AbstractType;
+ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+ use Symfony\Component\Form\Extension\Core\Type\CollectionType;
++use Symfony\Component\Form\Extension\Core\Type\EmailType;
+ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+@@ -70,6 +71,10 @@ class TeamType extends AbstractType
+             'label' => 'Team manager name',
+             'required' => false,
+         ]);
++        $builder->add('team_manager_email', EmailType::class, [
++            'label' => 'Team manager email',
++            'required' => false,
++        ]);
+         $builder->add('penalty', IntegerType::class, [
+             'label' => 'Penalty time',
+         ]);
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index a9fc5ae1d..2d2c166be 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -116,6 +116,17 @@ class UserRegistrationType extends AbstractType
+                     'mapped' => false,
+                 ]);
+         }
++        if ($this->config->get('show_team_manager_emails')) {
++            $builder
++                ->add('teamManagerEmail', EmailType::class, [
++                    'label' => false,
++                    'attr' => [
++                        'placeholder' => 'Team manager email address',
++                    ],
++                    'constraints' => new Email(),
++                    'mapped' => false,
++                ]);
++        }
+ 
+         $selfRegistrationCategoriesCount = $this->em->getRepository(TeamCategory::class)->count(['allow_self_registration' => 1]);
+         if ($selfRegistrationCategoriesCount > 1) {
+diff --git a/webapp/src/Migrations/Version20200328143509.php b/webapp/src/Migrations/Version20200328143509.php
+new file mode 100644
+index 000000000..c2bb7691a
+--- /dev/null
++++ b/webapp/src/Migrations/Version20200328143509.php
+@@ -0,0 +1,35 @@
++<?php
++
++declare(strict_types=1);
++
++namespace DoctrineMigrations;
++
++use Doctrine\DBAL\Schema\Schema;
++use Doctrine\Migrations\AbstractMigration;
++
++/**
++ * Auto-generated Migration: Please modify to your needs!
++ */
++final class Version20200328143509 extends AbstractMigration
++{
++    public function getDescription() : string
++    {
++        return 'add team manager email to teams';
++    }
++
++    public function up(Schema $schema) : void
++    {
++        // this up() migration is auto-generated, please modify it to your needs
++        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
++
++        $this->addSql('ALTER TABLE team ADD team_manager_email VARCHAR(255) DEFAULT NULL COLLATE utf8mb4_bin COMMENT \'Team manager email\'');
++    }
++
++    public function down(Schema $schema) : void
++    {
++        // this down() migration is auto-generated, please modify it to your needs
++        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
++
++        $this->addSql('ALTER TABLE team DROP team_manager_email');
++    }
++}
+diff --git a/webapp/templates/jury/partials/team_form.html.twig b/webapp/templates/jury/partials/team_form.html.twig
+index 532348cfb..5b700d8a6 100644
+--- a/webapp/templates/jury/partials/team_form.html.twig
++++ b/webapp/templates/jury/partials/team_form.html.twig
+@@ -8,6 +8,7 @@
+         {{ form_row(form.members) }}
+         {{ form_row(form.affiliation) }}
+         {{ form_row(form.team_manager_name) }}
++        {{ form_row(form.team_manager_email) }}
+         {{ form_row(form.penalty) }}
+         {{ form_row(form.room) }}
+         {{ form_row(form.comments) }}
+diff --git a/webapp/templates/jury/team.html.twig b/webapp/templates/jury/team.html.twig
+index 5e9b03de9..0fd8e5912 100644
+--- a/webapp/templates/jury/team.html.twig
++++ b/webapp/templates/jury/team.html.twig
+@@ -138,6 +138,18 @@
+                         <td>{{ team.teamManagerName }}</td>
+                     </tr>
+                 {% endif %}
++                {% if showTeamManagerEmails %}
++                    <tr>
++                        <th>Team manager email</th>
++                        <td>
++                            {% if team.teamManagerEmail %}
++                                <a href="mailto:{{ team.teamManagerEmail }}">{{ team.teamManagerEmail }}</a>
++                            {% else %}
++                                -
++                            {% endif %}
++                        </td>
++                    </tr>
++                {% endif %}
+                 {% if team.contests|length > 0 %}
+                 <tr>
+                     <th>Contests</th>
+-- 
+2.20.1
+

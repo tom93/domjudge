@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 22 Mar 2020 20:39:24 +1300
+Subject: Rename 'Add new affiliation' option to 'Add affiliation...'
+
+---
+ webapp/src/Form/Type/UserRegistrationType.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index 3aa4f561c..b2b9ca562 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -140,7 +140,7 @@ class UserRegistrationType extends AbstractType
+             $specialAffiliationChoices = [];
+             $specialAffiliationChoices['No affiliation'] = 'none';
+             if ($this->config->get('show_new_affiliation_option')) {
+-                $specialAffiliationChoices['Add new affiliation'] = 'new';
++                $specialAffiliationChoices['Add affiliation...'] = 'new';
+             }
+             $affiliations = [];
+             foreach ($this->em->getRepository(TeamAffiliation::class)->findAll() as $affiliation) {
+-- 
+2.20.1
+

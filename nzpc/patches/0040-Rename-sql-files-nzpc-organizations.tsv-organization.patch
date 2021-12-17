@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 18 Aug 2020 09:32:05 +1200
+Subject: Rename sql/files/nzpc-organizations.tsv => organizations-nzpc.tsv to
+ match exported filename of web interface
+
+---
+ sql/Makefile                                                 | 2 +-
+ sql/files/{nzpc-organizations.tsv => organizations-nzpc.tsv} | 0
+ webapp/src/Command/NZPCConfigureCommand.php                  | 2 +-
+ 3 files changed, 2 insertions(+), 2 deletions(-)
+ rename sql/files/{nzpc-organizations.tsv => organizations-nzpc.tsv} (100%)
+
+diff --git a/sql/Makefile b/sql/Makefile
+index 9fe3451ef..b256ebab8 100644
+--- a/sql/Makefile
++++ b/sql/Makefile
+@@ -41,7 +41,7 @@ install-domserver: $(ZIPFILES) $(TOPDIR)/doc/examples/.pdf-generated
+ 	$(INSTALL_DATA) -t $(DESTDIR)$(domserver_sqldir)/files/examples \
+ 		files/examples/*.zip
+ 	$(INSTALL_DATA) -t $(DESTDIR)$(domserver_sqldir)/files \
+-		files/nzpc-organizations.tsv
++		files/organizations-nzpc.tsv
+ 
+ # Make $(CONFSTUB) a dependency, and the other stuff sub-rules to make
+ # sure that config.h already exists when creating the zipfiles.
+diff --git a/sql/files/nzpc-organizations.tsv b/sql/files/organizations-nzpc.tsv
+similarity index 100%
+rename from sql/files/nzpc-organizations.tsv
+rename to sql/files/organizations-nzpc.tsv
+diff --git a/webapp/src/Command/NZPCConfigureCommand.php b/webapp/src/Command/NZPCConfigureCommand.php
+index 72579828c..15ed59069 100644
+--- a/webapp/src/Command/NZPCConfigureCommand.php
++++ b/webapp/src/Command/NZPCConfigureCommand.php
+@@ -129,7 +129,7 @@ EOF
+             ->addOption('disable-registration', null, InputOption::VALUE_NONE, 'Disable registration')
+             ->addOption('export-affiliations', null, InputOption::VALUE_NONE, 'Output the existing affiliations in TSV format')
+             ->addOption('affiliations-data', null, InputOption::VALUE_REQUIRED, 'Path of affiliation data to load, in TSV format with columns shortname and name',
+-                        sprintf('%s/files/nzpc-organizations.tsv', $this->sqlDir));
++                        sprintf('%s/files/organizations-nzpc.tsv', $this->sqlDir));
+     }
+ 
+     /**
+-- 
+2.20.1
+

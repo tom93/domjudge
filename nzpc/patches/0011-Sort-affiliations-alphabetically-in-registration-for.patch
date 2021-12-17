@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 20 Mar 2020 00:41:19 +1300
+Subject: Sort affiliations alphabetically in registration form
+
+---
+ webapp/src/Form/Type/UserRegistrationType.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index b2b9ca562..f4e6aedfc 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -143,7 +143,7 @@ class UserRegistrationType extends AbstractType
+                 $specialAffiliationChoices['Add affiliation...'] = 'new';
+             }
+             $affiliations = [];
+-            foreach ($this->em->getRepository(TeamAffiliation::class)->findAll() as $affiliation) {
++            foreach ($this->em->getRepository(TeamAffiliation::class)->findBy([], ['name' => 'ASC']) as $affiliation) {
+                 $affiliations[$affiliation->getName()] = $affiliation;
+             }
+ 
+-- 
+2.20.1
+
