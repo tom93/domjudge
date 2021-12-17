@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Thijs Kinkhorst <thijs@kinkhorst.com>
+Date: Mon, 9 Mar 2020 20:51:46 +0000
+Subject: cherry-pick: Fix code deprecated in PHP 7.4
+
+(cherry picked from commit b547acc5388a7b36d77d63d830cb573ad7e3374e)
+---
+ webapp/src/Service/EventLogService.php | 2 +-
+ webapp/src/Twig/TwigExtension.php      | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/webapp/src/Service/EventLogService.php b/webapp/src/Service/EventLogService.php
+index 1118d9338..868a052b8 100644
+--- a/webapp/src/Service/EventLogService.php
++++ b/webapp/src/Service/EventLogService.php
+@@ -233,7 +233,7 @@ class EventLogService implements ContainerAwareInterface
+ 
+         // Make a combined string to keep track of the data ID's
+         $dataidsCombined = json_encode($dataIds);
+-        $idsCombined     = $ids === null ? null : is_array($ids) ? json_encode($ids) : $ids;
++        $idsCombined     = $ids === null ? null : (is_array($ids) ? json_encode($ids) : $ids);
+ 
+         $this->logger->debug(
+             "EventLogService::log arguments: '%s' '%s' '%s' '%s' '%s' '%s'",
+diff --git a/webapp/src/Twig/TwigExtension.php b/webapp/src/Twig/TwigExtension.php
+index b32d2722a..2b0aca404 100644
+--- a/webapp/src/Twig/TwigExtension.php
++++ b/webapp/src/Twig/TwigExtension.php
+@@ -614,7 +614,7 @@ class TwigExtension extends AbstractExtension implements GlobalsInterface
+                 break;
+             }
+             $idx = $closePos + 1;
+-            $is_validator = $log{$idx} == '>';
++            $is_validator = $log[$idx] == '>';
+             $content = htmlspecialchars(substr($log, $idx + 3, $len));
+             $content = '<td class="output_text">'
+                 . str_replace("\n", "\u{21B5}<br/>", $content)
+-- 
+2.20.1
+

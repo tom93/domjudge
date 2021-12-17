@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Thu, 28 May 2020 01:46:15 +1200
+Subject: Add tooltips to username and team name fields in registration form
+
+---
+ webapp/src/Form/Type/UserRegistrationType.php | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index ff14300f4..7c43dfcc1 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -69,6 +69,7 @@ class UserRegistrationType extends AbstractType
+                 'label' => false,
+                 'attr' => [
+                     'placeholder' => 'Username',
++                    'title' => 'Used to log in to this contest website. Must be alphanumeric.',
+                 ],
+             ]);
+         if ($this->config->get('show_user_emails')) {
+@@ -87,6 +88,7 @@ class UserRegistrationType extends AbstractType
+                 'label' => false,
+                 'attr' => [
+                     'placeholder' => 'Team name',
++                    'title' => 'Displayed on the scoreboard.',
+                 ],
+                 'constraints' => [
+                     new NotBlank(),
+-- 
+2.20.1
+

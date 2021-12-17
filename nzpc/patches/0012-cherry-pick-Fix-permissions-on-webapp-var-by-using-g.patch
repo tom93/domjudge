@@ -1,0 +1,118 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jaap Eldering <jaap@jaapeldering.nl>
+Date: Sun, 22 Mar 2020 17:12:18 +0100
+Subject: cherry-pick: Fix permissions on webapp/var/* by using group setsid
+ bit.
+
+Use a small script that we can call from the Makefile and when
+running dj_setup_database. Since in many situations root will
+have default access to mysql, it's likely this command is run
+as root. That will screw up permissions of cache files too, so
+try to fix them here too.
+
+Closes issue 650
+
+(cherry picked from commit 6c718e5e129fba4265b752b29229a2df7b07c4de)
+---
+ Makefile                      |  2 ++
+ misc-tools/.gitignore         |  1 +
+ misc-tools/Makefile           |  2 +-
+ misc-tools/fix_permissions.in | 23 +++++++++++++++++++++++
+ sql/dj_setup_database.in      |  6 ++++++
+ 5 files changed, 33 insertions(+), 1 deletion(-)
+ create mode 100755 misc-tools/fix_permissions.in
+
+diff --git a/Makefile b/Makefile
+index 3f7802653..615198548 100644
+--- a/Makefile
++++ b/Makefile
+@@ -124,6 +124,8 @@ install-domserver-l:
+ 	-for d in cache log ; do \
+ 		$(INSTALL_WEBSITE) -m 0775 -d $(DESTDIR)$(domserver_webappdir)/var/$$d ; \
+ 	done
++# Make sure that domjudge user and webserver group can write to var/{cache,log}:
++	DESTDIR=$(DESTDIR) $(domserver_bindir)/fix_permissions
+ # Special case create tmpdir here, only when FHS not enabled:
+ ifneq "$(FHS_ENABLED)" "yes"
+ 	-$(INSTALL_WEBSITE) -m 0770 -d $(DESTDIR)$(domserver_tmpdir)
+diff --git a/misc-tools/.gitignore b/misc-tools/.gitignore
+index f42375247..6c6e11ee7 100644
+--- a/misc-tools/.gitignore
++++ b/misc-tools/.gitignore
+@@ -6,6 +6,7 @@
+ /create_accounts
+ /judging_statistics
+ /multi_rejudge
++/fix_permissions
+ /dj_make_chroot
+ /dj_make_chroot_docker
+ /dj_run_chroot
+diff --git a/misc-tools/Makefile b/misc-tools/Makefile
+index bf493d737..e4ffb9bdd 100644
+--- a/misc-tools/Makefile
++++ b/misc-tools/Makefile
+@@ -7,7 +7,7 @@ TARGETS =
+ OBJECTS =
+ 
+ SUBST_DOMSERVER = save_sources2file restore_sources2db \
+-                  judging_statistics balloons \
++                  judging_statistics balloons fix_permissions \
+                   simulate_contest create_accounts multi_rejudge
+ 
+ SUBST_JUDGEHOST = create_cgroups dj_make_chroot dj_run_chroot dj_make_chroot_docker
+diff --git a/misc-tools/fix_permissions.in b/misc-tools/fix_permissions.in
+new file mode 100755
+index 000000000..a56031178
+--- /dev/null
++++ b/misc-tools/fix_permissions.in
+@@ -0,0 +1,23 @@
++#!/bin/sh
++# @configure_input@
++
++# This script fixes permissions on webapp/var/ to make sure the
++# webserver can write there.
++
++WEBAPPDIR="@domserver_webappdir@"
++
++DOMJUDGE_USER="@DOMJUDGE_USER@"
++WEBSERVER_GROUP="@WEBSERVER_GROUP@"
++
++set -e
++
++if [ `id -u` -ne 0 ]; then
++	echo "Error: can only change permissions as root."
++	exit 1
++fi
++
++# DESTDIR may optionally be past through the environment by make.
++chown -R ${DOMJUDGE_USER}:${WEBSERVER_GROUP} ${DESTDIR}${WEBAPPDIR}/var
++chmod -R g+rwxs                              ${DESTDIR}${WEBAPPDIR}/var
++setfacl -R -m d:g::rwX                       ${DESTDIR}${WEBAPPDIR}/var
++setfacl -R -m d:u:${DOMJUDGE_USER}:rwX       ${DESTDIR}${WEBAPPDIR}/var
+diff --git a/sql/dj_setup_database.in b/sql/dj_setup_database.in
+index b066c6c08..74ad35f12 100755
+--- a/sql/dj_setup_database.in
++++ b/sql/dj_setup_database.in
+@@ -6,6 +6,7 @@
+ 
+ set -e
+ 
++BINDIR="@domserver_bindir@"
+ ETCDIR="@domserver_etcdir@"
+ WEBAPPDIR="@domserver_webappdir@"
+ 
+@@ -128,6 +129,11 @@ symfony_console()
+ 	else
+ 		${WEBAPPDIR}/bin/console -v $ARG "$@"
+ 	fi
++
++	# Make sure any generated cache data has the right permissions if we ran as root.
++	if [ `id -u` -eq 0 ]; then
++		${BINDIR}/fix_permissions
++	fi
+ }
+ 
+ read_dbpasswords()
+-- 
+2.20.1
+

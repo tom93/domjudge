@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sat, 13 Jun 2020 16:58:24 +1200
+Subject: partial cherry-pick: Import ConfigurationService in BalloonController
+ to avoid merge conflicts
+
+(partially cherry picked from commit 46441019847719337c20a4fa74cd60d10830a474)
+---
+ webapp/src/Controller/Jury/BalloonController.php | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/webapp/src/Controller/Jury/BalloonController.php b/webapp/src/Controller/Jury/BalloonController.php
+index bcf151e96..fe55509ee 100644
+--- a/webapp/src/Controller/Jury/BalloonController.php
++++ b/webapp/src/Controller/Jury/BalloonController.php
+@@ -5,6 +5,7 @@ namespace App\Controller\Jury;
+ use App\Entity\Balloon;
+ use App\Entity\ScoreCache;
+ use App\Entity\TeamAffiliation;
++use App\Service\ConfigurationService;
+ use App\Service\DOMJudgeService;
+ use App\Service\EventLogService;
+ use App\Utils\Utils;
+-- 
+2.20.1
+

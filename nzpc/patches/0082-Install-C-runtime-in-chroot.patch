@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 28 Jul 2020 06:16:57 +1200
+Subject: Install C# runtime in chroot
+
+---
+ misc-tools/dj_make_chroot.in | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/misc-tools/dj_make_chroot.in b/misc-tools/dj_make_chroot.in
+index 6a7586249..6c9f8f3b3 100755
+--- a/misc-tools/dj_make_chroot.in
++++ b/misc-tools/dj_make_chroot.in
+@@ -127,8 +127,7 @@ if [ "$DISTRO" = 'Debian' ]; then
+ INCLUDEDEBS="ca-certificates"
+ 
+ # Packages to install after upgrade (space separated):
+-INSTALLDEBS="default-jre-headless pypy python3 locales"
+-# For C# support add: mono-runtime
++INSTALLDEBS="default-jre-headless pypy python3 locales mono-runtime"
+ 
+ # Packages to remove after upgrade (space separated):
+ REMOVEDEBS=""
+@@ -155,8 +154,7 @@ if [ "$DISTRO" = 'Ubuntu' ]; then
+ INCLUDEDEBS="software-properties-common"
+ 
+ # Packages to install after upgrade (space separated):
+-INSTALLDEBS="default-jre-headless pypy python3 locales"
+-# For C# support add: mono-runtime
++INSTALLDEBS="default-jre-headless pypy python3 locales mono-runtime"
+ 
+ # Packages to remove after upgrade (space separated):
+ REMOVEDEBS=""
+-- 
+2.20.1
+

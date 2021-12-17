@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 18 Aug 2020 05:07:54 +1200
+Subject: Look up affiliations by shortname if externalid is missing when
+ importing organizations
+
+---
+ webapp/src/Service/ImportExportService.php | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/webapp/src/Service/ImportExportService.php b/webapp/src/Service/ImportExportService.php
+index 7234a757e..cc6030640 100644
+--- a/webapp/src/Service/ImportExportService.php
++++ b/webapp/src/Service/ImportExportService.php
+@@ -639,17 +639,17 @@ class ImportExportService
+     protected function importOrganizationData(array $organizationData): int
+     {
+         foreach ($organizationData as $organizationItem) {
+-            $externalId      = $organizationItem['externalid'];
+-            $teamAffiliation = $this->em->getRepository(TeamAffiliation::class)->findOneBy(['externalid' => $externalId]);
++            $key             = isset($organizationItem['externalid']) ? 'externalid' : 'shortname';
++            $teamAffiliation = $this->em->getRepository(TeamAffiliation::class)->findOneBy([$key => $organizationItem[$key]]);
+             if (!$teamAffiliation) {
+                 $teamAffiliation = new TeamAffiliation();
+-                $teamAffiliation->setExternalid($externalId);
+                 $this->em->persist($teamAffiliation);
+                 $action = EventLogService::ACTION_CREATE;
+             } else {
+                 $action = EventLogService::ACTION_UPDATE;
+             }
+             $teamAffiliation
++                ->setExternalid(@$organizationItem['externalid'])
+                 ->setShortname($organizationItem['shortname'])
+                 ->setName($organizationItem['name'])
+                 ->setCountry($organizationItem['country']);
+-- 
+2.20.1
+

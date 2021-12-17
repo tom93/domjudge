@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Wed, 18 Mar 2020 23:47:02 +1300
+Subject: Add "Team members" field to registration form
+
+---
+ webapp/src/Controller/SecurityController.php  |  4 ++++
+ webapp/src/Form/Type/UserRegistrationType.php | 14 ++++++++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/webapp/src/Controller/SecurityController.php b/webapp/src/Controller/SecurityController.php
+index 6ae0890d3..31483fac2 100644
+--- a/webapp/src/Controller/SecurityController.php
++++ b/webapp/src/Controller/SecurityController.php
+@@ -152,6 +152,10 @@ class SecurityController extends AbstractController
+                 ->setCategory($teamCategory)
+                 ->setComments('Registered by ' . $this->dj->getClientIp() . ' on ' . date('r'));
+ 
++            if ($this->config->get('show_team_members')) {
++                $team->setMembers($registration_form->get('members')->getData());
++            }
++
+             if ($this->config->get('show_affiliations')) {
+                 switch ($registration_form->get('affiliation')->getData()) {
+                     case 'new':
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index c335e8d32..053a3b0a2 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -17,6 +17,7 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
+ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+ use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
+ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
++use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+ use Symfony\Component\Form\Extension\Core\Type\TextType;
+ use Symfony\Component\Form\Form;
+ use Symfony\Component\Form\FormBuilderInterface;
+@@ -118,6 +119,19 @@ class UserRegistrationType extends AbstractType
+                 ]);
+         }
+ 
++        if ($this->config->get('show_team_members')) {
++            $builder
++                ->add('members', TextareaType::class, [
++                    'label' => false,
++                    'mapped' => false,
++                    'attr' => [
++                        'placeholder' => 'Team members (optional)',
++                    ],
++                    'required' => false,
++                    'mapped' => false,
++                ]);
++        }
++
+         if ($this->config->get('show_affiliations')) {
+             $countries = [];
+             foreach (Utils::ALPHA3_COUNTRIES as $alpha3 => $country) {
+-- 
+2.20.1
+

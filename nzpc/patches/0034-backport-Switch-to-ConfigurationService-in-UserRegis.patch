@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 12 Jun 2020 06:49:27 +1200
+Subject: backport: Switch to ConfigurationService in UserRegistrationType
+ avoid merge conflicts
+
+---
+ webapp/src/Form/Type/UserRegistrationType.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index bb686c5df..d5790fa88 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -219,7 +219,7 @@ class UserRegistrationType extends AbstractType
+     public function configureOptions(OptionsResolver $resolver)
+     {
+         $validateAffiliation = function ($data, ExecutionContext $context) {
+-            if ($this->dj->dbconfig_get('show_affiliations', true)) {
++            if ($this->config->get('show_affiliations')) {
+                 /** @var Form $form */
+                 $form = $context->getRoot();
+                 switch ($form->get('affiliation')->getData()) {
+-- 
+2.20.1
+

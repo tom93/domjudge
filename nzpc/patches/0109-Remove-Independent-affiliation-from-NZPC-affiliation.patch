@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 5 Sep 2021 20:35:33 +1200
+Subject: Remove "Independent" affiliation from NZPC affiliation data
+
+The "No affiliation" option is enough.
+---
+ sql/files/organizations-nzpc.tsv | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/sql/files/organizations-nzpc.tsv b/sql/files/organizations-nzpc.tsv
+index 49b66dee3..c9a1933c5 100644
+--- a/sql/files/organizations-nzpc.tsv
++++ b/sql/files/organizations-nzpc.tsv
+@@ -19,7 +19,6 @@ Fraser HS	Fraser High School
+ HBHS	Hamilton Boys' High School
+ HHS	Hillcrest High School
+ Howick Col	Howick College
+-Ind	Independent
+ JHC	James Hargest College
+ JMCG	John McGlashan College
+ Kristin	Kristin School
+-- 
+2.20.1
+

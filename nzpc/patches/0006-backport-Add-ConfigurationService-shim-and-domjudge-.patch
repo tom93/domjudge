@@ -1,0 +1,334 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Wed, 10 Jun 2020 01:28:03 +1200
+Subject: backport: Add ConfigurationService shim and domjudge:db-config:update
+ command
+
+---
+ sql/dj_setup_database.in                      |   2 +
+ .../UpdateDatabaseConfigurationCommand.php    | 143 ++++++++++++++++++
+ ...onfigurationService-dependency-snippet.php |   8 +
+ webapp/src/Service/ConfigurationService.php   | 126 +++++++++++++++
+ 4 files changed, 279 insertions(+)
+ create mode 100644 webapp/src/Command/UpdateDatabaseConfigurationCommand.php
+ create mode 100644 webapp/src/Service/ConfigurationService-dependency-snippet.php
+ create mode 100644 webapp/src/Service/ConfigurationService.php
+
+diff --git a/sql/dj_setup_database.in b/sql/dj_setup_database.in
+index c1d98b21e..b066c6c08 100755
+--- a/sql/dj_setup_database.in
++++ b/sql/dj_setup_database.in
+@@ -285,6 +285,7 @@ bare-install|install)
+ 	create_db_users
+ 	export DB_FIRST_INSTALL=1
+ 	symfony_console doctrine:migrations:migrate -n
++	DBUSER=$domjudge_DBUSER PASSWD=$domjudge_PASSWD symfony_console -vv domjudge:db-config:update
+ 	unset DB_FIRST_INSTALL
+ 	if [ "$1" = "install" ]; then
+ 		DBUSER=$domjudge_DBUSER PASSWD=$domjudge_PASSWD symfony_console domjudge:load-example-data
+@@ -304,6 +305,7 @@ upgrade)
+ 	fi
+ 	read_dbpasswords
+ 	symfony_console doctrine:migrations:migrate -n
++	DBUSER=$domjudge_DBUSER PASSWD=$domjudge_PASSWD symfony_console -vv domjudge:db-config:update
+ 	verbose "DOMjudge database upgrade completed."
+ 	rm -f $TMPOUT
+ 	;;
+diff --git a/webapp/src/Command/UpdateDatabaseConfigurationCommand.php b/webapp/src/Command/UpdateDatabaseConfigurationCommand.php
+new file mode 100644
+index 000000000..fc297c212
+--- /dev/null
++++ b/webapp/src/Command/UpdateDatabaseConfigurationCommand.php
+@@ -0,0 +1,143 @@
++<?php declare(strict_types=1);
++
++namespace App\Command;
++
++use App\Config\Loader\YamlConfigLoader;
++use App\Entity\Configuration;
++use App\Service\DOMJudgeService;
++use Doctrine\ORM\EntityManagerInterface;
++use Exception;
++use Psr\Log\LoggerInterface;
++use Symfony\Component\Config\FileLocator;
++use Symfony\Component\Console\Command\Command;
++use Symfony\Component\Console\Formatter\OutputFormatter;
++use Symfony\Component\Console\Input\InputInterface;
++use Symfony\Component\Console\Input\InputOption;
++use Symfony\Component\Console\Output\OutputInterface;
++
++/**
++ * Class UpdateDatabaseConfigurationCommand
++ * @package App\Command
++ */
++class UpdateDatabaseConfigurationCommand extends Command
++{
++    /**
++     * @var EntityManagerInterface
++     */
++    protected $em;
++
++    /**
++     * @var DOMJudgeService
++     */
++    protected $dj;
++
++    /**
++     * @var LoggerInterface
++     */
++    protected $logger;
++
++    /**
++     * @var string
++     */
++    protected $etcDir;
++
++    /**
++     * UpdateConfigurationCommand constructor.
++     *
++     * @param EntityManagerInterface $em
++     * @param DOMJudgeService        $dj
++     * @param LoggerInterface        $logger
++     * @param string|null            $name
++     */
++    public function __construct(
++        EntityManagerInterface $em,
++        DOMJudgeService $dj,
++        LoggerInterface $logger,
++        string $name = null
++    ) {
++        $this->em     = $em;
++        $this->dj     = $dj;
++        $this->logger = $logger;
++        $this->etcDir = $dj->getDomjudgeEtcDir();
++        parent::__construct($name);
++    }
++
++    /**
++     * @inheritDoc
++     */
++    protected function configure()
++    {
++        $this
++            ->setName('domjudge:db-config:update')
++            ->setDescription('Update the database configuration from etc/db-config.yaml')
++            ->setHelp('Helps backport configuration changes from DOMjudge 7.3 to 7.2.')
++            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Show what would be done without modifying database');
++    }
++
++    /**
++     * @inheritDoc
++     * @throws Exception
++     */
++    protected function execute(InputInterface $input, OutputInterface $output)
++    {
++        // If no verbosity level was specified using -q/-v, increase the verbosity to very verbose
++        if ($output->getVerbosity() === OutputInterface::VERBOSITY_NORMAL) {
++            $output->setVerbosity(OutputInterface::VERBOSITY_VERY_VERBOSE);
++        }
++
++        // Load db-config.yaml (see ConfigurationService.php on DOMjudge 7.3)
++        $yamlDbConfigFile = $this->etcDir . '/db-config.yaml';
++        $fileLocator      = new FileLocator($this->etcDir);
++        $loader           = new YamlConfigLoader($fileLocator);
++        $yamlConfig       = $loader->load($yamlDbConfigFile);
++
++        $count = 0;
++        foreach ($yamlConfig as $category) {
++            foreach ($category['items'] as $item) {
++                $this->logger->debug("Processing configuration option '%s'", ['name' => $item['name']]);
++                $count++;
++                // Check if option already exists in the database
++                $option = $this->em->getRepository(Configuration::class)->findOneBy(['name' => $item['name']]);
++                if (!$option) {
++                    // Add option to database
++                    $option = new Configuration();
++                    $option->setName($item['name']);
++                    $option->setType($item['type']);
++                    $option->setValue($item['default_value']);
++                    $option->setPublic($item['public']);
++                    $option->setDescription($item['description']);
++                    $option->setCategory($category['category']);
++                    $this->logger->info("Adding configuration option '%s' with value %s", [$item['name'], OutputFormatter::escape($this->dj->jsonEncode($item['default_value']))]);
++                    if (!$input->getOption('dry-run')) {
++                        $this->em->persist($option);
++                        $this->em->flush();
++                    }
++                } else {
++                    // Option already exists, compare and display any differences
++                    if ($option->getType() !== $item['type']) {
++                        $this->logger->warning("Configuration option '%s': type in database is %s, but type in db-config.yaml is %s", [$item['name'], $option->getType(), $item['type']]);
++                    }
++                    $currentValue = $option->getType() === 'bool' ? (bool)$option->getValue() : $option->getValue();
++                    if ($currentValue !== $item['default_value']) {
++                        $this->logger->info("Configuration option '%s': value in database is %s, default value db-config.yaml is %s", [$item['name'], OutputFormatter::escape($this->dj->jsonEncode($currentValue)), OutputFormatter::escape($this->dj->jsonEncode($item['default_value']))]);
++                    }
++                    if ($option->getPublic() !== $item['public']) {
++                        $this->logger->warning("Configuration option '%s': %s in database but %s in db-config.yaml", [$item['name'], $option->getPublic() ? "public" : "not public", $item['public'] ? "public" : "not public"]);
++                    }
++                    if ($option->getDescription() !== $item['description']) {
++                        $this->logger->info("Configuration option '%s': description has changed", [$item['name']]);
++                        $this->logger->info("database:       %s", [OutputFormatter::escape($this->dj->jsonEncode($option->getDescription()))]);
++                        $this->logger->info("db-config.yaml: %s", [OutputFormatter::escape($this->dj->jsonEncode($item['description']))]);
++                    }
++                    if ($option->getCategory() !== $category['category']) {
++                        $this->logger->info("Configuration option '%s': category in database is %s, category in db-config.yaml is %s", [$item['name'], $option->getCategory(), $category['category']]);
++                    }
++                }
++            }
++        }
++
++	$this->logger->info('Processed %d configuration options', [$count]);
++
++        return 0;
++    }
++}
+diff --git a/webapp/src/Service/ConfigurationService-dependency-snippet.php b/webapp/src/Service/ConfigurationService-dependency-snippet.php
+new file mode 100644
+index 000000000..6ccb1e461
+--- /dev/null
++++ b/webapp/src/Service/ConfigurationService-dependency-snippet.php
+@@ -0,0 +1,8 @@
++    // backport: use a shim for the ConfigurationService class (added in DOMjudge 7.3)
++    protected $config;
++    /** @required */
++    public function setConfig(\App\Service\ConfigurationService $config)
++    {
++        $this->config = $config;
++    }
++
+diff --git a/webapp/src/Service/ConfigurationService.php b/webapp/src/Service/ConfigurationService.php
+new file mode 100644
+index 000000000..e8ff31841
+--- /dev/null
++++ b/webapp/src/Service/ConfigurationService.php
+@@ -0,0 +1,126 @@
++<?php declare(strict_types=1);
++
++namespace App\Service;
++
++use App\Entity\Configuration;
++use Doctrine\ORM\EntityManagerInterface;
++use Exception;
++use Psr\Log\LoggerInterface;
++use Symfony\Component\Intl\Exception\NotImplementedException;
++
++/**
++ * Class ConfigurationService
++ *
++ * This is a shim of a class added in DOMjudge 7.3 (commit 464410198, Move
++ * specification of configuration variables to YAML file and outside of
++ * database, 2020-01-11). The shim helps backport changes from 7.3 to 7.2.
++ *
++ * To use this shim from a class, define an autowired dependency using the code
++ * snippet in ConfigurationService-dependency-snippet.php.
++ *
++ * This shim does not read the new configuration file etc/db-config.yaml; it
++ * only supports configuration data that exists in the database. Use the
++ * command `webapp/bin/console domjudge:db-config:update [--dry-run]` to update
++ * the database from etc/db-config.yaml.
++ *
++ * When new configuration options are added to etc/db-config.yaml, the property
++ * $defaults should be updated with their default values. Otherwise get() will
++ * throw an exception if the user does not run domjudge:db-config:update.
++ *
++ * @package App\Service
++ */
++class ConfigurationService
++{
++    /**
++     * @var EntityManagerInterface
++     */
++    protected $em;
++
++    /**
++     * @var DOMJudgeService
++     */
++    protected $dj;
++
++    /**
++     * @var LoggerInterface
++     */
++    protected $logger;
++
++    /**
++     * Default values of new configuration options that might not exist in the
++     * database yet if domjudge:db-config:update hasn't been executed.
++     *
++     * Should match etc/db-config.yaml.
++     *
++     * @var array
++     */
++    protected $defaults = [
++    ];
++
++    /**
++     * ConfigurationService constructor.
++     *
++     * @param EntityManagerInterface $em
++     * @param DOMJudgeService        $dj
++     * @param LoggerInterface        $logger
++     */
++    public function __construct(
++        EntityManagerInterface $em,
++        DOMJudgeService $dj,
++        LoggerInterface $logger
++    ) {
++        $this->em     = $em;
++        $this->dj     = $dj;
++        $this->logger = $logger;
++    }
++
++    /**
++     * Get the value for the given configuration name
++     *
++     * @param string $name         The config name to get the value of
++     * @param bool   $onlyIfPublic Only return the value if the config is
++     *                             public
++     *
++     * @return mixed The configuration value
++     * @throws Exception If the config can't be found and not default is
++     *                   supplied
++     */
++    public function get(string $name, bool $onlyIfPublic = false)
++    {
++        $default = $this->defaults[$name] ?? null;
++        return $this->dj->dbconfig_get($name, $default, $onlyIfPublic);
++    }
++
++    /**
++     * Get all the configuration values, indexed by name
++     *
++     * @param bool $onlyIfPublic
++     *
++     * @return array
++     * @throws Exception
++     */
++    public function all(bool $onlyIfPublic = false): array
++    {
++        throw new NotImplementedException();
++    }
++
++    /**
++     * Get all configuration specifications
++     *
++     * @throws Exception
++     */
++    public function getConfigSpecification(): array
++    {
++        throw new NotImplementedException();
++    }
++
++    /**
++     * Get the configuration values from the database
++     *
++     * @return array
++     */
++    protected function getDbValues(): array
++    {
++        throw new NotImplementedException();
++    }
++}
+-- 
+2.20.1
+

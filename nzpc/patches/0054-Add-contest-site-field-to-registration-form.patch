@@ -1,0 +1,82 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Mon, 30 Mar 2020 02:42:00 +1300
+Subject: Add contest site field to registration form
+
+It is only shown if there are multiple active contest sites.
+---
+ webapp/src/Controller/SecurityController.php  |  8 +++++++
+ webapp/src/Form/Type/UserRegistrationType.php | 24 +++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/webapp/src/Controller/SecurityController.php b/webapp/src/Controller/SecurityController.php
+index 8b079353f..afb76f31d 100644
+--- a/webapp/src/Controller/SecurityController.php
++++ b/webapp/src/Controller/SecurityController.php
+@@ -2,6 +2,7 @@
+ 
+ namespace App\Controller;
+ 
++use App\Entity\ContestSite;
+ use App\Entity\Role;
+ use App\Entity\Team;
+ use App\Entity\TeamAffiliation;
+@@ -152,6 +153,13 @@ class SecurityController extends AbstractController
+                 ->setCategory($teamCategory)
+                 ->setComments('Registered by ' . $this->dj->getClientIp() . ' on ' . date('r'));
+ 
++            $contestSitesCount = $em->getRepository(ContestSite::class)->count(['active' => 1]);
++            if ($contestSitesCount === 1) {
++                $team->setSite($em->getRepository(ContestSite::class)->findOneBy(['active' => 1]));
++            } elseif ($contestSitesCount > 1) {
++                $team->setSite($registration_form->get('contestSite')->getData());
++            }
++
+             if ($this->config->get('show_team_managers')) {
+                 $team->setTeamManagerName($registration_form->get('teamManagerName')->getData());
+             }
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index f8b102bf1..ff14300f4 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -2,6 +2,7 @@
+ 
+ namespace App\Form\Type;
+ 
++use App\Entity\ContestSite;
+ use App\Entity\Team;
+ use App\Entity\TeamAffiliation;
+ use App\Entity\TeamCategory;
+@@ -148,6 +149,29 @@ class UserRegistrationType extends AbstractType
+                 ]);
+         }
+ 
++        $contestSitesCount = $this->em->getRepository(ContestSite::class)->count(['active' => 1]);
++        if ($contestSitesCount > 1) {
++            $builder
++                ->add('contestSite', EntityType::class, [
++                    'class' => ContestSite::class,
++                    'label' => false,
++                    'mapped' => false,
++                    'choice_label' => 'name',
++                    'placeholder' => '-- Select contest site --',
++                    'query_builder' => function (EntityRepository $er) {
++                        return $er
++                            ->createQueryBuilder('s')
++                            ->where('s.active = 1')
++                            ->orderBy('s.sortorder')
++                            ->addOrderBy('s.name', 'ASC')
++                            ->addOrderBy('s.siteid');
++                    },
++                    'constraints' => [
++                        new NotBlank(),
++                    ],
++                ]);
++        }
++
+         if ($this->config->get('show_team_members')) {
+             $builder
+                 ->add('members', TextareaType::class, [
+-- 
+2.20.1
+

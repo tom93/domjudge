@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 18 Aug 2020 05:09:03 +1200
+Subject: Allow country to be missing when importing organization data
+
+---
+ webapp/src/Service/ImportExportService.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/webapp/src/Service/ImportExportService.php b/webapp/src/Service/ImportExportService.php
+index cc6030640..bed9c3ec1 100644
+--- a/webapp/src/Service/ImportExportService.php
++++ b/webapp/src/Service/ImportExportService.php
+@@ -652,7 +652,7 @@ class ImportExportService
+                 ->setExternalid(@$organizationItem['externalid'])
+                 ->setShortname($organizationItem['shortname'])
+                 ->setName($organizationItem['name'])
+-                ->setCountry($organizationItem['country']);
++                ->setCountry(@$organizationItem['country']);
+             $this->em->flush();
+             if ($contest = $this->dj->getCurrentContest()) {
+                 $this->eventLogService->log('team_affiliation', $teamAffiliation->getAffilid(), $action,
+-- 
+2.20.1
+

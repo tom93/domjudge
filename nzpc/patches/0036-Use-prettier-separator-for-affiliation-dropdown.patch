@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Wed, 18 Mar 2020 01:29:39 +1300
+Subject: Use prettier separator for affiliation dropdown
+
+The default is '-------------------'.
+---
+ webapp/templates/form_theme.html.twig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/webapp/templates/form_theme.html.twig b/webapp/templates/form_theme.html.twig
+index 734587a93..8c8865a95 100644
+--- a/webapp/templates/form_theme.html.twig
++++ b/webapp/templates/form_theme.html.twig
+@@ -2,6 +2,7 @@
+ 
+ {% block choice_widget_collapsed -%}
+     {%- set attr = attr|merge({class: (attr.class|default('') ~ ' form-control custom-select')|trim}) -%}
++    {%- set separator = '──────────' -%}
+     {{- parent() -}}
+ {%- endblock choice_widget_collapsed %}
+ 
+-- 
+2.20.1
+

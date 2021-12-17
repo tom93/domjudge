@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sat, 13 Jun 2020 16:52:46 +1200
+Subject: backport: Switch to ConfigurationService in BalloonController to
+ avoid merge conflicts
+
+---
+ webapp/src/Controller/Jury/BalloonController.php | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/webapp/src/Controller/Jury/BalloonController.php b/webapp/src/Controller/Jury/BalloonController.php
+index dafa15dd0..97e27dfd3 100644
+--- a/webapp/src/Controller/Jury/BalloonController.php
++++ b/webapp/src/Controller/Jury/BalloonController.php
+@@ -68,8 +68,8 @@ class BalloonController extends AbstractController
+      */
+     public function indexAction(Request $request, Packages $assetPackage, KernelInterface $kernel)
+     {
+-        $timeFormat = (string)$this->dj->dbconfig_get('time_format', '%H:%M');
+-        $showPostFreeze = (bool)$this->dj->dbconfig_get('show_balloons_postfreeze', false);
++        $timeFormat = (string)$this->config->get('time_format');
++        $showPostFreeze = (bool)$this->config->get('show_balloons_postfreeze');
+ 
+         $em = $this->em;
+ 
+-- 
+2.20.1
+

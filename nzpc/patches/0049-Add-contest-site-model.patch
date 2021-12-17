@@ -1,0 +1,224 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Mon, 30 Mar 2020 02:06:35 +1300
+Subject: Add contest site model
+
+It represents a location where the contest is held, for contests that
+run across multiple locations.
+---
+ webapp/src/Entity/ContestSite.php             | 160 ++++++++++++++++++
+ .../src/Migrations/Version20200329123201.php  |  35 ++++
+ 2 files changed, 195 insertions(+)
+ create mode 100644 webapp/src/Entity/ContestSite.php
+ create mode 100644 webapp/src/Migrations/Version20200329123201.php
+
+diff --git a/webapp/src/Entity/ContestSite.php b/webapp/src/Entity/ContestSite.php
+new file mode 100644
+index 000000000..ef7e849dc
+--- /dev/null
++++ b/webapp/src/Entity/ContestSite.php
+@@ -0,0 +1,160 @@
++<?php declare(strict_types=1);
++namespace App\Entity;
++
++use Doctrine\ORM\Mapping as ORM;
++use JMS\Serializer\Annotation as Serializer;
++use Symfony\Component\Validator\Constraints as Assert;
++
++/**
++ * Contest sites (for contests that run across multiple locations)
++ * @ORM\Entity()
++ * @ORM\Table(
++ *     name="contest_site",
++ *     options={"collate"="utf8mb4_unicode_ci", "charset"="utf8mb4", "comment"="Contest sites (for contests that run across multiple locations)"},
++ *     indexes={@ORM\Index(name="sortorder", columns={"sortorder"})})
++ */
++class ContestSite extends BaseApiEntity
++{
++    /**
++     * @var int
++     * @ORM\Id
++     * @ORM\GeneratedValue(strategy="AUTO")
++     * @ORM\Column(type="integer", name="siteid", length=4,
++     *     options={"comment"="Contest site ID","unsigned"=true}, nullable=false)
++     * @Serializer\SerializedName("id")
++     * @Serializer\Type("string")
++     */
++    protected $siteid;
++
++    /**
++     * @var string
++     * @ORM\Column(type="string", name="name", length=255,
++     *     options={"comment"="Descriptive name"}, nullable=false)
++     * @Assert\NotBlank()
++     */
++    private $name;
++
++    /**
++     * @var int
++     * @ORM\Column(type="tinyint", name="sortorder", length=1,
++     *     options={"comment"="Where to sort this site",
++     *              "unsigned"=true,"default"="0"},
++     *     nullable=false)
++     * @Serializer\Groups({"Nonstrict"})
++     * @Assert\GreaterThanOrEqual(0, message="Only non-negative sortorders are supported")
++     */
++    private $sortorder = 0;
++
++    /**
++     * @var boolean
++     * @ORM\Column(type="boolean", name="active",
++     *     options={"comment"="Does this site accept new registrations?",
++     *              "default"="1"},
++     *     nullable=false)
++     * @Serializer\Exclude()
++     */
++    private $active = true;
++
++    /**
++    * To String
++    */
++    public function __toString()
++    {
++        return $this->name;
++    }
++
++    /**
++     * Set siteid
++     *
++     * @param int $siteid
++     *
++     * @return ContestSite
++     */
++    public function setSiteid(int $siteid)
++    {
++        $this->siteid = $siteid;
++        return $this;
++    }
++
++    /**
++     * Get siteid
++     *
++     * @return integer
++     */
++    public function getSiteid()
++    {
++        return $this->siteid;
++    }
++
++    /**
++     * Set name
++     *
++     * @param string $name
++     *
++     * @return ContestSite
++     */
++    public function setName($name)
++    {
++        $this->name = $name;
++
++        return $this;
++    }
++
++    /**
++     * Get name
++     *
++     * @return string
++     */
++    public function getName()
++    {
++        return $this->name;
++    }
++
++    /**
++     * Set sortorder
++     *
++     * @param integer $sortorder
++     *
++     * @return ContestSite
++     */
++    public function setSortorder($sortorder)
++    {
++        $this->sortorder = $sortorder;
++
++        return $this;
++    }
++
++    /**
++     * Get sortorder
++     *
++     * @return integer
++     */
++    public function getSortorder()
++    {
++        return $this->sortorder;
++    }
++
++    /**
++     * Set active
++     *
++     * @param boolean $active
++     *
++     * @return ContestSite
++     */
++    public function setActive($active)
++    {
++        $this->active = $active;
++
++        return $this;
++    }
++
++    /**
++     * Get active
++     *
++     * @return boolean
++     */
++    public function getActive()
++    {
++        return $this->active;
++    }
++}
+diff --git a/webapp/src/Migrations/Version20200329123201.php b/webapp/src/Migrations/Version20200329123201.php
+new file mode 100644
+index 000000000..21308ec8c
+--- /dev/null
++++ b/webapp/src/Migrations/Version20200329123201.php
+@@ -0,0 +1,35 @@
++<?php
++
++declare(strict_types=1);
++
++namespace DoctrineMigrations;
++
++use Doctrine\DBAL\Schema\Schema;
++use Doctrine\Migrations\AbstractMigration;
++
++/**
++ * Auto-generated Migration: Please modify to your needs!
++ */
++final class Version20200329123201 extends AbstractMigration
++{
++    public function getDescription() : string
++    {
++        return 'add contest sites table';
++    }
++
++    public function up(Schema $schema) : void
++    {
++        // this up() migration is auto-generated, please modify it to your needs
++        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
++
++        $this->addSql('CREATE TABLE contest_site (siteid INT UNSIGNED AUTO_INCREMENT NOT NULL COMMENT \'Contest site ID\', name VARCHAR(255) NOT NULL COMMENT \'Descriptive name\', sortorder TINYINT(1) UNSIGNED DEFAULT \'0\' NOT NULL COMMENT \'Where to sort this site(DC2Type:tinyint)\', active TINYINT(1) DEFAULT \'1\' NOT NULL COMMENT \'Does this site accept new registrations?\', INDEX sortorder (sortorder), PRIMARY KEY(siteid)) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE = InnoDB COMMENT = \'Contest sites (for contests that run across multiple locations)\' ');
++    }
++
++    public function down(Schema $schema) : void
++    {
++        // this down() migration is auto-generated, please modify it to your needs
++        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
++
++        $this->addSql('DROP TABLE contest_site');
++    }
++}
+-- 
+2.20.1
+

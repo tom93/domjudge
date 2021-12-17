@@ -1,0 +1,128 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 31 Mar 2020 03:14:29 +1300
+Subject: Add contest site to balloon filter
+
+---
+ .../src/Controller/Jury/BalloonController.php   | 13 +++++++++++++
+ .../src/Controller/Jury/JuryMiscController.php  | 17 +++++++++++++++++
+ webapp/templates/jury/balloons.html.twig        | 15 +++++++++++++++
+ .../jury/partials/balloon_list.html.twig        |  3 ++-
+ 4 files changed, 47 insertions(+), 1 deletion(-)
+
+diff --git a/webapp/src/Controller/Jury/BalloonController.php b/webapp/src/Controller/Jury/BalloonController.php
+index 99be9cfe0..05e598ad4 100644
+--- a/webapp/src/Controller/Jury/BalloonController.php
++++ b/webapp/src/Controller/Jury/BalloonController.php
+@@ -3,6 +3,7 @@
+ namespace App\Controller\Jury;
+ 
+ use App\Entity\Balloon;
++use App\Entity\ContestSite;
+ use App\Entity\ScoreCache;
+ use App\Entity\TeamAffiliation;
+ use App\Service\BalloonService;
+@@ -109,6 +110,17 @@ class BalloonController extends AbstractController
+                 ->getQuery()
+                 ->getResult();
+         }
++        $filteredSites = [];
++        if (isset($filters['site-id'])) {
++            /** @var ContestSite[] $filteredSites */
++            $filteredSites = $this->em->createQueryBuilder()
++                ->from(ContestSite::class, 's')
++                ->select('s')
++                ->where('s.siteid IN (:siteIds)')
++                ->setParameter(':siteIds', $filters['site-id'])
++                ->getQuery()
++                ->getResult();
++        }
+ 
+         return $this->render('jury/balloons.html.twig', [
+             'refresh' => [
+@@ -119,6 +131,7 @@ class BalloonController extends AbstractController
+             'isfrozen' => isset($contest->getState()['frozen']),
+             'hasFilters' => !empty($filters),
+             'filteredAffiliations' => $filteredAffiliations,
++            'filteredSites' => $filteredSites,
+             'balloons' => $balloons_table
+         ]);
+     }
+diff --git a/webapp/src/Controller/Jury/JuryMiscController.php b/webapp/src/Controller/Jury/JuryMiscController.php
+index 841533510..3297747f0 100644
+--- a/webapp/src/Controller/Jury/JuryMiscController.php
++++ b/webapp/src/Controller/Jury/JuryMiscController.php
+@@ -4,6 +4,7 @@ namespace App\Controller\Jury;
+ 
+ use App\Controller\BaseController;
+ use App\Entity\Contest;
++use App\Entity\ContestSite;
+ use App\Entity\Judging;
+ use App\Entity\Language;
+ use App\Entity\Problem;
+@@ -178,6 +179,22 @@ class JuryMiscController extends BaseController
+                     'text' => $displayname,
+                 ];
+             }, $affiliations);
++        } elseif ($datatype === 'sites') {
++            $sites = $qb->from(ContestSite::class, 's')
++                ->select('s.siteid', 's.name')
++                ->where($qb->expr()->like('s.name', '?1'))
++                ->orWhere($qb->expr()->eq('s.siteid', '?2'))
++                ->orderBy('s.name', 'ASC')
++                ->getQuery()->setParameter(1, '%' . $q . '%')
++                ->setParameter(2, $q)
++                ->getResult();
++
++            $results = array_map(function (array $site) {
++                return [
++                    'id' => $site['siteid'],
++                    'text' => $site['name'],
++                ];
++            }, $sites);
+         } else {
+             throw new NotFoundHttpException("Unknown AJAX data type: " . $datatype);
+         }
+diff --git a/webapp/templates/jury/balloons.html.twig b/webapp/templates/jury/balloons.html.twig
+index 1f36460f7..cdafe83f6 100644
+--- a/webapp/templates/jury/balloons.html.twig
++++ b/webapp/templates/jury/balloons.html.twig
+@@ -46,6 +46,21 @@
+                     </div>
+                 </div>
+ 
++                <div class="form-row">
++                    <div class="form-group col-sm-6">
++                        <label for="site-filter">Filter on contest site(s)</label>
++                        <select class="select2 form-control" multiple data-filter-field="site-id"
++                                data-ajax-url="{{ path('jury_ajax_data', {datatype: 'sites', select2: true}) }}">
++                            {%- for site in filteredSites %}
++                                <option value="{{ site.siteid }}" selected>
++                                    {{ site.name }}
++                                </option>
++                            {%- endfor %}
++
++                        </select>
++                    </div>
++                </div>
++
+                 <button class="btn btn-secondary" id="clear-filters"><i class="fas fa-times-circle"></i> Clear all
+                     filters
+                 </button>
+diff --git a/webapp/templates/jury/partials/balloon_list.html.twig b/webapp/templates/jury/partials/balloon_list.html.twig
+index bf03a786e..3f63688e8 100644
+--- a/webapp/templates/jury/partials/balloon_list.html.twig
++++ b/webapp/templates/jury/partials/balloon_list.html.twig
+@@ -25,7 +25,8 @@
+         {%- for balloon in balloons %}
+             <tr class="{% if balloon.data.done %}disabled{% endif %}"
+                 data-affiliation-id="{{ balloon.data.affiliationid }}"
+-                data-location-str="{{ balloon.data.location }}">
++                data-location-str="{{ balloon.data.location }}"
++                data-site-id="{{ balloon.data.siteid }}">
+                 <td>
+                 {%- if balloon.data.done -%}
+                     <i class="far fa-check-circle"></i>
+-- 
+2.20.1
+

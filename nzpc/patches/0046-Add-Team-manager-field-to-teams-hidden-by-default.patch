@@ -1,0 +1,236 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 29 Mar 2020 02:57:42 +1300
+Subject: Add "Team manager" field to teams (hidden by default)
+
+It can be enabled using the new configuration option
+'show_team_managers'.
+
+It is only shown to jury members.
+---
+ etc/db-config.yaml                            |  5 +++
+ webapp/src/Controller/Jury/TeamController.php |  2 ++
+ webapp/src/Controller/SecurityController.php  |  4 +++
+ webapp/src/Entity/Team.php                    | 32 +++++++++++++++++
+ webapp/src/Form/Type/TeamType.php             |  4 +++
+ webapp/src/Form/Type/UserRegistrationType.php | 14 ++++++++
+ .../src/Migrations/Version20200328132750.php  | 35 +++++++++++++++++++
+ .../jury/partials/team_form.html.twig         |  1 +
+ webapp/templates/jury/team.html.twig          |  6 ++++
+ 9 files changed, 103 insertions(+)
+ create mode 100644 webapp/src/Migrations/Version20200328132750.php
+
+diff --git a/etc/db-config.yaml b/etc/db-config.yaml
+index 2505f364a..4294b57f2 100644
+--- a/etc/db-config.yaml
++++ b/etc/db-config.yaml
+@@ -194,6 +194,11 @@
+             default_value: true
+             public: true
+             description: Allow teams to create new affiliations during self-registration?
++        -   name: show_team_managers
++            type: bool
++            default_value: false
++            public: true
++            description: Show team manager name in the interfaces?
+         -   name: show_teams_submissions
+             type: bool
+             default_value: true
+diff --git a/webapp/src/Controller/Jury/TeamController.php b/webapp/src/Controller/Jury/TeamController.php
+index 0fcf2095a..6336fd943 100644
+--- a/webapp/src/Controller/Jury/TeamController.php
++++ b/webapp/src/Controller/Jury/TeamController.php
+@@ -131,6 +131,7 @@ class TeamController extends BaseController
+             'name' => ['title' => 'teamname', 'sort' => true, 'default_sort' => true],
+             'category' => ['title' => 'category', 'sort' => true,],
+             'affiliation' => ['title' => 'affiliation', 'sort' => true,],
++            'team_manager_name' => ['title' => 'team manager', 'sort' => true,],
+             'num_contests' => ['title' => '# contests', 'sort' => true,],
+             'ip_address' => ['title' => 'ip', 'sort' => true,],
+             'room' => ['title' => 'room', 'sort' => true,],
+@@ -289,6 +290,7 @@ class TeamController extends BaseController
+             'showTeamMembers' => (bool)$this->config->get('show_team_members'),
+             'showAffiliations' => (bool)$this->config->get('show_affiliations'),
+             'showFlags' => (bool)$this->config->get('show_flags'),
++            'showTeamManagers' => (bool)$this->config->get('show_team_managers'),
+             'showContest' => count($this->dj->getCurrentContests()) > 1,
+             'maxWidth' => $this->dj->dbconfig_get("team_column_width", 0),
+         ];
+diff --git a/webapp/src/Controller/SecurityController.php b/webapp/src/Controller/SecurityController.php
+index cb189e998..baf49633c 100644
+--- a/webapp/src/Controller/SecurityController.php
++++ b/webapp/src/Controller/SecurityController.php
+@@ -152,6 +152,10 @@ class SecurityController extends AbstractController
+                 ->setCategory($teamCategory)
+                 ->setComments('Registered by ' . $this->dj->getClientIp() . ' on ' . date('r'));
+ 
++            if ($this->config->get('show_team_managers')) {
++                $team->setTeamManagerName($registration_form->get('teamManagerName')->getData());
++            }
++
+             if ($this->config->get('show_team_members')) {
+                 $team->setMembers($registration_form->get('members')->getData());
+             }
+diff --git a/webapp/src/Entity/Team.php b/webapp/src/Entity/Team.php
+index 24d3f6595..589487102 100644
+--- a/webapp/src/Entity/Team.php
++++ b/webapp/src/Entity/Team.php
+@@ -73,6 +73,14 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
+      */
+     private $affilid;
+ 
++    /**
++     * @var string
++     * @ORM\Column(type="string", name="team_manager_name", length=255, options={"comment"="Team manager name", "collation"="utf8mb4_bin"},
++     *                            nullable=true)
++     * @Serializer\Exclude()
++     */
++    private $team_manager_name;
++
+     /**
+      * @var boolean
+      * @ORM\Column(type="boolean", name="enabled",
+@@ -318,6 +326,30 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
+         return $this->affilid;
+     }
+ 
++    /**
++     * Set team manager name
++     *
++     * @param string $teamManagerName
++     *
++     * @return Team
++     */
++    public function setTeamManagerName($teamManagerName)
++    {
++        $this->team_manager_name = $teamManagerName;
++
++        return $this;
++    }
++
++    /**
++     * Get team manager name
++     *
++     * @return string
++     */
++    public function getTeamManagerName()
++    {
++        return $this->team_manager_name;
++    }
++
+     /**
+      * Set enabled
+      *
+diff --git a/webapp/src/Form/Type/TeamType.php b/webapp/src/Form/Type/TeamType.php
+index d4f43533e..f889091d5 100644
+--- a/webapp/src/Form/Type/TeamType.php
++++ b/webapp/src/Form/Type/TeamType.php
+@@ -60,6 +60,10 @@ class TeamType extends AbstractExternalIdEntityType
+                 return $er->createQueryBuilder('a')->orderBy('a.name');
+             },
+         ]);
++        $builder->add('team_manager_name', TextType::class, [
++            'label' => 'Team manager name',
++            'required' => false,
++        ]);
+         $builder->add('penalty', IntegerType::class, [
+             'label' => 'Penalty time',
+         ]);
+diff --git a/webapp/src/Form/Type/UserRegistrationType.php b/webapp/src/Form/Type/UserRegistrationType.php
+index 3ee562993..58470ac8f 100644
+--- a/webapp/src/Form/Type/UserRegistrationType.php
++++ b/webapp/src/Form/Type/UserRegistrationType.php
+@@ -99,6 +99,20 @@ class UserRegistrationType extends AbstractType
+                 'mapped' => false,
+             ]);
+ 
++        if ($this->config->get('show_team_managers')) {
++            $builder
++                ->add('teamManagerName', TextType::class, [
++                    'label' => false,
++                    'attr' => [
++                        'placeholder' => 'Team manager name',
++                    ],
++                    'constraints' => [
++                        new NotBlank(),
++                    ],
++                    'mapped' => false,
++                ]);
++        }
++
+         $selfRegistrationCategoriesCount = $this->em->getRepository(TeamCategory::class)->count(['allow_self_registration' => 1]);
+         if ($selfRegistrationCategoriesCount > 1) {
+             $builder
+diff --git a/webapp/src/Migrations/Version20200328132750.php b/webapp/src/Migrations/Version20200328132750.php
+new file mode 100644
+index 000000000..4a312f8cc
+--- /dev/null
++++ b/webapp/src/Migrations/Version20200328132750.php
+@@ -0,0 +1,35 @@
++<?php
++
++declare(strict_types=1);
++
++namespace DoctrineMigrations;
++
++use Doctrine\DBAL\Schema\Schema;
++use Doctrine\Migrations\AbstractMigration;
++
++/**
++ * Auto-generated Migration: Please modify to your needs!
++ */
++final class Version20200328132750 extends AbstractMigration
++{
++    public function getDescription() : string
++    {
++        return 'add team manager name to teams';
++    }
++
++    public function up(Schema $schema) : void
++    {
++        // this up() migration is auto-generated, please modify it to your needs
++        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
++
++        $this->addSql('ALTER TABLE team ADD team_manager_name VARCHAR(255) DEFAULT NULL COLLATE utf8mb4_bin COMMENT \'Team manager name\'');
++    }
++
++    public function down(Schema $schema) : void
++    {
++        // this down() migration is auto-generated, please modify it to your needs
++        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
++
++        $this->addSql('ALTER TABLE team DROP team_manager_name');
++    }
++}
+diff --git a/webapp/templates/jury/partials/team_form.html.twig b/webapp/templates/jury/partials/team_form.html.twig
+index e91176c1f..09ed1df4b 100644
+--- a/webapp/templates/jury/partials/team_form.html.twig
++++ b/webapp/templates/jury/partials/team_form.html.twig
+@@ -8,6 +8,7 @@
+         {{ form_row(form.category) }}
+         {{ form_row(form.members) }}
+         {{ form_row(form.affiliation) }}
++        {{ form_row(form.team_manager_name) }}
+         {{ form_row(form.penalty) }}
+         {{ form_row(form.room) }}
+         {{ form_row(form.comments) }}
+diff --git a/webapp/templates/jury/team.html.twig b/webapp/templates/jury/team.html.twig
+index 2e11b7658..9ea1d68ea 100644
+--- a/webapp/templates/jury/team.html.twig
++++ b/webapp/templates/jury/team.html.twig
+@@ -122,6 +122,12 @@
+                         </td>
+                     </tr>
+                 {% endif %}
++                {% if showTeamManagers %}
++                    <tr>
++                        <th>Team manager name</th>
++                        <td>{{ team.teamManagerName }}</td>
++                    </tr>
++                {% endif %}
+                 {% if team.contests|length > 0 %}
+                 <tr>
+                     <th>Contests</th>
+-- 
+2.20.1
+

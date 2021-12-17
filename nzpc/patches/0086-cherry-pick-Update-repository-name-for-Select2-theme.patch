@@ -1,0 +1,93 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Mon, 17 Aug 2020 19:45:33 +0000
+Subject: cherry-pick: Update repository name for Select2 theme
+
+(cherry picked from commit a8ff3b6592e3425d2b3b72571a94b396454e3911)
+---
+ composer.json                               | 6 +++---
+ composer.lock                               | 8 ++++----
+ symfony.lock                                | 2 +-
+ webapp/public/css/select2-bootstrap.min.css | 2 +-
+ 4 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/composer.json b/composer.json
+index 0e8568f13..825ab228d 100644
+--- a/composer.json
++++ b/composer.json
+@@ -18,10 +18,10 @@
+ 		{
+ 			"type": "package",
+ 			"package": {
+-				"name": "angel-vladov/select2-bootstrap-theme",
++				"name": "angel-vladov/select2-theme-bootstrap4",
+ 				"version": "0.2.0-beta.3",
+ 				"dist": {
+-					"url": "https://github.com/angel-vladov/select2-bootstrap-theme/archive/0.2.0-beta.3.zip",
++					"url": "https://github.com/angel-vladov/select2-theme-bootstrap4/archive/0.2.0-beta.3.zip",
+ 					"type": "zip"
+ 				}
+ 			}
+@@ -50,7 +50,7 @@
+ 		"ext-mysqli": "*",
+ 		"ext-pcntl": "*",
+ 		"ext-zip": "*",
+-		"angel-vladov/select2-bootstrap-theme": "0.2.0-beta.3",
++		"angel-vladov/select2-theme-bootstrap4": "0.2.0-beta.3",
+ 		"components/jquery": "^3.3",
+ 		"datatables/datatables": "^1.10",
+ 		"doctrine/doctrine-bundle": "^1.11",
+diff --git a/composer.lock b/composer.lock
+index e88a32ffe..9b3a916ce 100644
+--- a/composer.lock
++++ b/composer.lock
+@@ -4,14 +4,14 @@
+         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+         "This file is @generated automatically"
+     ],
+-    "content-hash": "6fba989bc2fcc09289a99bec53b041fc",
++    "content-hash": "adf5869d7a09669fcfe9af36b35850bd",
+     "packages": [
+         {
+-            "name": "angel-vladov/select2-bootstrap-theme",
++            "name": "angel-vladov/select2-theme-bootstrap4",
+             "version": "0.2.0-beta.3",
+             "dist": {
+                 "type": "zip",
+-                "url": "https://github.com/angel-vladov/select2-bootstrap-theme/archive/0.2.0-beta.3.zip"
++                "url": "https://github.com/angel-vladov/select2-theme-bootstrap4/archive/0.2.0-beta.3.zip"
+             },
+             "type": "library"
+         },
+@@ -8965,7 +8965,7 @@
+     "aliases": [],
+     "minimum-stability": "stable",
+     "stability-flags": {
+-        "angel-vladov/select2-bootstrap-theme": 10
++        "angel-vladov/select2-theme-bootstrap4": 10
+     },
+     "prefer-stable": false,
+     "prefer-lowest": false,
+diff --git a/symfony.lock b/symfony.lock
+index dca46d9eb..4976de3a7 100644
+--- a/symfony.lock
++++ b/symfony.lock
+@@ -1,5 +1,5 @@
+ {
+-    "angel-vladov/select2-bootstrap-theme": {
++    "angel-vladov/select2-theme-bootstrap4": {
+         "version": "0.2.0-beta.3"
+     },
+     "components/jquery": {
+diff --git a/webapp/public/css/select2-bootstrap.min.css b/webapp/public/css/select2-bootstrap.min.css
+index 82fd36f4f..a1e21b64c 120000
+--- a/webapp/public/css/select2-bootstrap.min.css
++++ b/webapp/public/css/select2-bootstrap.min.css
+@@ -1 +1 @@
+-../../../lib/vendor/angel-vladov/select2-bootstrap-theme/dist/select2-bootstrap.min.css
+\ No newline at end of file
++../../../lib/vendor/angel-vladov/select2-theme-bootstrap4/dist/select2-bootstrap.min.css
+\ No newline at end of file
+-- 
+2.20.1
+

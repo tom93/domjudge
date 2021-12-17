@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: s911415 <s911415@users.noreply.github.com>
+Date: Sun, 29 Mar 2020 18:07:25 +0800
+Subject: cherry-pick: Update judgedaemon.main.php
+
+Fix deprecated parameters for implode
+
+(cherry picked from commit 4653dc48aed5416e0b3f656882c280f0f05b271c)
+---
+ judge/judgedaemon.main.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/judge/judgedaemon.main.php b/judge/judgedaemon.main.php
+index b9a520994..64b7d8be2 100644
+--- a/judge/judgedaemon.main.php
++++ b/judge/judgedaemon.main.php
+@@ -1145,7 +1145,7 @@ function fetchTestcase(array $row, $workdirpath, $rank): array
+     }
+     // Only log downloading input and/or output testdata once.
+     if (count($fetched) > 0) {
+-        logmsg(LOG_INFO, "Fetched new " . implode($fetched, ',') .
++        logmsg(LOG_INFO, "Fetched new " . implode(',', $fetched) .
+             " testcase $rank for problem p$row[probid]");
+     }
+     return $tcfile;
+-- 
+2.20.1
+

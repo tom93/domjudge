@@ -1,0 +1,68 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 12 Jun 2020 05:57:05 +1200
+Subject: backport: Change TeamScore to Plain Old Data.
+
+(partial backport of commit 8f0cb0539188d7f3477e66ef6fc262b8347f3e28)
+---
+ webapp/src/Utils/Scoreboard/TeamScore.php | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/webapp/src/Utils/Scoreboard/TeamScore.php b/webapp/src/Utils/Scoreboard/TeamScore.php
+index d52f220ae..55281997c 100644
+--- a/webapp/src/Utils/Scoreboard/TeamScore.php
++++ b/webapp/src/Utils/Scoreboard/TeamScore.php
+@@ -9,27 +9,27 @@ class TeamScore
+     /**
+      * @var Team
+      */
+-    protected $team;
++    public $team;
+ 
+     /**
+      * @var int
+      */
+-    protected $numberOfPoints = 0;
++    public $numPoints = 0;
+ 
+     /**
+      * @var float[]
+      */
+-    protected $solveTimes = [];
++    public $solveTimes = [];
+ 
+     /**
+      * @var int
+      */
+-    protected $rank = 0;
++    public $rank = 0;
+ 
+     /**
+      * @var int
+      */
+-    protected $totalTime;
++    public $totalTime;
+ 
+     /**
+      * TeamScore constructor.
+@@ -54,7 +54,7 @@ class TeamScore
+      */
+     public function getNumberOfPoints(): int
+     {
+-        return $this->numberOfPoints;
++        return $this->numPoints;
+     }
+ 
+     /**
+@@ -62,7 +62,7 @@ class TeamScore
+      */
+     public function addNumberOfPoints(int $numberOfPoints)
+     {
+-        $this->numberOfPoints += $numberOfPoints;
++        $this->numPoints += $numberOfPoints;
+     }
+ 
+     /**
+-- 
+2.20.1
+

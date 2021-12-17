@@ -1,0 +1,100 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 5 Sep 2021 20:37:49 +1200
+Subject: Update NZPC affiliation data
+
+---
+ sql/files/organizations-nzpc.tsv | 31 ++++++++++++++++++++++++++++---
+ 1 file changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/sql/files/organizations-nzpc.tsv b/sql/files/organizations-nzpc.tsv
+index c9a1933c5..9210ff28a 100644
+--- a/sql/files/organizations-nzpc.tsv
++++ b/sql/files/organizations-nzpc.tsv
+@@ -2,32 +2,44 @@ Comb	(Combined school team)
+ X	(not listed)
+ ACG Parnel	ACG Parnell College
+ Strath	ACG Strathallan
++Aotea	Aotea
+ Ara	Ara Institute of Canterbury
+-Ash Coll	Ashburton College
++Ashburton	Ashburton College
+ AGS	Auckland Grammar School
+ AIC	Auckland International College
+ AUT	Auckland University of Technology
+-Av Col	Avondale College
++Avondale	Avondale College
++Avonside	Avonside Girls High School
+ BDSC	Botany Downs Secondary College
+ BurnsideHS	Burnside High School
+ Cashmere H	Cashmere High School
++C-M	Cashmere-Amuri
+ Christ's	Christ's College
++ChristchurchBoys	Christchurch Boys High School
++CGHS	Christchurch Girls High
+ Columba	Columba College
++CompuTech	CompuTech Club
++Diocesan	Diocesan
+ EIT	Eastern Institute of Technology
+ EGGS	Epsom Girls Grammar School
+ Fraser HS	Fraser High School
++Hagley	Hagley College
+ HBHS	Hamilton Boys' High School
+ HHS	Hillcrest High School
+ Howick Col	Howick College
+ JHC	James Hargest College
+ JMCG	John McGlashan College
++Kaiapoi	Kaiapoi High School
+ Kristin	Kristin School
++Lincoln	Lincoln High School
+ LBC	Long Bay College
+ Lynfield	Lynfield College
++MacC	Macleans College
++Marian	Marian
+ Middleton	Middleton Grange School
+-MRGS	Mount Roskill Grammar School
+ Mozilla	Mozilla
+ MAGS	Mt Albert Grammar School
++MRGS	Mt Roskill Grammar School
+ Navman	Navman Technology NZ Ltd.
+ NPBHS	New Plymouth Boys' High School
+ Newlands C	Newlands College
+@@ -35,22 +47,35 @@ Onslow	Onslow College
+ OSC	Ormiston Senior College
+ PN Int	Palmerston North Intermediate Normal School
+ PHS	Papanui High School
++Paraparaumu	Paraparumu
++Pukekohe	Pukekohe
++RangioraNewLife	Rangiora New Life School
+ Rangitoto	Rangitoto College
++Rolleston	Rolleston
+ SKC	Saint Kentigern College
+ Samuel Mar	Samuel Marsden Whitby
+ Queenstown	SIT Queenstown Campus
+ SIT	Southern Institute of Technology
++STAC	St Andrews College
++St Dominics	St Dominics
++St Hildas	St Hilda's
+ St Johns	St Johns College
++St Marys	St Mary's
+ SPC	St. Paul's Collegiate
+ SunCo	Sunderland College
++Tapawera	Tapawera
+ TBC	Tauranga Boys' College
+ Tawa	Tawa College
+ U Auckland	University of Auckland
+ U Cantab	University of Canterbury
+ Otago	University of Otago
+ U Waikato	University of Waikato
++VC	Verdon College
++VUW	Victoria University of Wellington
+ Waitakere	Waitakere College
++WEG	Wellington East Girls
+ WHS	Wellington High School
+ WBHS	Westlake Boys High School
+ WA	Whampoa Academy
++Whitby	Whitby
+ Whitireia	Whitireia New Zealand
+-- 
+2.20.1
+

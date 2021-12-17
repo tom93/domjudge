@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 12 Jun 2020 06:35:32 +1200
+Subject: backport: Add ConfigurationService shim to TeamController,
+ PublicController, Team/ScoreboardController
+
+---
+ webapp/src/Controller/Jury/TeamController.php       | 8 ++++++++
+ webapp/src/Controller/PublicController.php          | 8 ++++++++
+ webapp/src/Controller/Team/ScoreboardController.php | 8 ++++++++
+ 3 files changed, 24 insertions(+)
+
+diff --git a/webapp/src/Controller/Jury/TeamController.php b/webapp/src/Controller/Jury/TeamController.php
+index 05ac393b2..1682d674f 100644
+--- a/webapp/src/Controller/Jury/TeamController.php
++++ b/webapp/src/Controller/Jury/TeamController.php
+@@ -30,6 +30,14 @@ use Symfony\Component\Routing\Annotation\Route;
+  */
+ class TeamController extends BaseController
+ {
++    // backport: use a shim for the ConfigurationService class (added in DOMjudge 7.3)
++    protected $config;
++    /** @required */
++    public function setConfig(\App\Service\ConfigurationService $config)
++    {
++        $this->config = $config;
++    }
++
+     /**
+      * @var EntityManagerInterface
+      */
+diff --git a/webapp/src/Controller/PublicController.php b/webapp/src/Controller/PublicController.php
+index c23926b6f..f9b215a9c 100644
+--- a/webapp/src/Controller/PublicController.php
++++ b/webapp/src/Controller/PublicController.php
+@@ -27,6 +27,14 @@ use Symfony\Component\Routing\RouterInterface;
+  */
+ class PublicController extends BaseController
+ {
++    // backport: use a shim for the ConfigurationService class (added in DOMjudge 7.3)
++    protected $config;
++    /** @required */
++    public function setConfig(\App\Service\ConfigurationService $config)
++    {
++        $this->config = $config;
++    }
++
+     /**
+      * @var DOMJudgeService
+      */
+diff --git a/webapp/src/Controller/Team/ScoreboardController.php b/webapp/src/Controller/Team/ScoreboardController.php
+index 31b36ccfd..7f34db537 100644
+--- a/webapp/src/Controller/Team/ScoreboardController.php
++++ b/webapp/src/Controller/Team/ScoreboardController.php
+@@ -24,6 +24,14 @@ use Symfony\Component\Routing\Annotation\Route;
+  */
+ class ScoreboardController extends BaseController
+ {
++    // backport: use a shim for the ConfigurationService class (added in DOMjudge 7.3)
++    protected $config;
++    /** @required */
++    public function setConfig(\App\Service\ConfigurationService $config)
++    {
++        $this->config = $config;
++    }
++
+     /**
+      * @var DOMJudgeService
+      */
+-- 
+2.20.1
+

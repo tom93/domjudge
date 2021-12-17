@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 12 Jun 2020 06:36:22 +1200
+Subject: backport: Switch to ConfigurationService in TeamController,
+ PublicController, Team/ScoreboardController to avoid merge conflicts
+
+---
+ webapp/src/Controller/Jury/TeamController.php       | 4 ++--
+ webapp/src/Controller/PublicController.php          | 4 ++--
+ webapp/src/Controller/Team/ScoreboardController.php | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/webapp/src/Controller/Jury/TeamController.php b/webapp/src/Controller/Jury/TeamController.php
+index 1682d674f..d754052bc 100644
+--- a/webapp/src/Controller/Jury/TeamController.php
++++ b/webapp/src/Controller/Jury/TeamController.php
+@@ -286,8 +286,8 @@ class TeamController extends BaseController
+                 'ajax' => true,
+             ],
+             'team' => $team,
+-            'showAffiliations' => (bool)$this->dj->dbconfig_get('show_affiliations', true),
+-            'showFlags' => (bool)$this->dj->dbconfig_get('show_flags', true),
++            'showAffiliations' => (bool)$this->config->get('show_affiliations'),
++            'showFlags' => (bool)$this->config->get('show_flags'),
+             'showContest' => count($this->dj->getCurrentContests()) > 1,
+             'maxWidth' => $this->dj->dbconfig_get("team_column_width", 0),
+         ];
+diff --git a/webapp/src/Controller/PublicController.php b/webapp/src/Controller/PublicController.php
+index f9b215a9c..b75e81214 100644
+--- a/webapp/src/Controller/PublicController.php
++++ b/webapp/src/Controller/PublicController.php
+@@ -158,8 +158,8 @@ class PublicController extends BaseController
+     public function teamAction(Request $request, int $teamId)
+     {
+         $team             = $this->em->getRepository(Team::class)->find($teamId);
+-        $showFlags        = (bool)$this->dj->dbconfig_get('show_flags', true);
+-        $showAffiliations = (bool)$this->dj->dbconfig_get('show_affiliations', true);
++        $showFlags        = (bool)$this->config->get('show_flags');
++        $showAffiliations = (bool)$this->config->get('show_affiliations');
+         $data             = [
+             'team' => $team,
+             'showFlags' => $showFlags,
+diff --git a/webapp/src/Controller/Team/ScoreboardController.php b/webapp/src/Controller/Team/ScoreboardController.php
+index 7f34db537..9a0466a3d 100644
+--- a/webapp/src/Controller/Team/ScoreboardController.php
++++ b/webapp/src/Controller/Team/ScoreboardController.php
+@@ -97,8 +97,8 @@ class ScoreboardController extends BaseController
+     public function teamAction(Request $request, int $teamId)
+     {
+         $team             = $this->em->getRepository(Team::class)->find($teamId);
+-        $showFlags        = (bool)$this->dj->dbconfig_get('show_flags', true);
+-        $showAffiliations = (bool)$this->dj->dbconfig_get('show_affiliations', true);
++        $showFlags        = (bool)$this->config->get('show_flags');
++        $showAffiliations = (bool)$this->config->get('show_affiliations');
+         $data             = [
+             'team' => $team,
+             'showFlags' => $showFlags,
+-- 
+2.20.1
+

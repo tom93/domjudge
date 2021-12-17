@@ -1,0 +1,547 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Mon, 30 Mar 2020 17:38:54 +1300
+Subject: Add contest site pages
+
+---
+ .../Controller/Jury/ContestSiteController.php | 270 ++++++++++++++++++
+ webapp/src/Form/Type/ContestSiteType.php      |  34 +++
+ webapp/src/Service/SubmissionService.php      |   7 +
+ webapp/templates/jury/contest_site.html.twig  |  81 ++++++
+ .../templates/jury/contest_site_add.html.twig |  12 +
+ .../jury/contest_site_edit.html.twig          |  12 +
+ webapp/templates/jury/contest_sites.html.twig |  23 ++
+ webapp/templates/jury/index.html.twig         |   1 +
+ .../jury/partials/contest_site_form.html.twig |   9 +
+ 9 files changed, 449 insertions(+)
+ create mode 100644 webapp/src/Controller/Jury/ContestSiteController.php
+ create mode 100644 webapp/src/Form/Type/ContestSiteType.php
+ create mode 100644 webapp/templates/jury/contest_site.html.twig
+ create mode 100644 webapp/templates/jury/contest_site_add.html.twig
+ create mode 100644 webapp/templates/jury/contest_site_edit.html.twig
+ create mode 100644 webapp/templates/jury/contest_sites.html.twig
+ create mode 100644 webapp/templates/jury/partials/contest_site_form.html.twig
+
+diff --git a/webapp/src/Controller/Jury/ContestSiteController.php b/webapp/src/Controller/Jury/ContestSiteController.php
+new file mode 100644
+index 000000000..5780f2b11
+--- /dev/null
++++ b/webapp/src/Controller/Jury/ContestSiteController.php
+@@ -0,0 +1,270 @@
++<?php declare(strict_types=1);
++
++namespace App\Controller\Jury;
++
++use App\Controller\BaseController;
++use App\Entity\ContestSite;
++use App\Entity\Submission;
++use App\Form\Type\ContestSiteType;
++use App\Service\ConfigurationService;
++use App\Service\DOMJudgeService;
++use App\Service\EventLogService;
++use App\Service\SubmissionService;
++use Doctrine\ORM\EntityManagerInterface;
++use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
++use Symfony\Component\Asset\Packages;
++use Symfony\Component\HttpFoundation\Request;
++use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
++use Symfony\Component\HttpKernel\KernelInterface;
++use Symfony\Component\PropertyAccess\PropertyAccess;
++use Symfony\Component\Routing\Annotation\Route;
++
++/**
++ * @Route("/jury/sites")
++ * @IsGranted("ROLE_JURY")
++ */
++class ContestSiteController extends BaseController
++{
++    /**
++     * @var EntityManagerInterface
++     */
++    protected $em;
++
++    /**
++     * @var DOMJudgeService
++     */
++    protected $dj;
++
++    /**
++     * @var ConfigurationService
++     */
++    protected $config;
++
++    /**
++     * @var KernelInterface
++     */
++    protected $kernel;
++
++    /**
++     * @var EventLogService
++     */
++    protected $eventLogService;
++
++    /**
++     * ContestSiteController constructor.
++     *
++     * @param EntityManagerInterface $em
++     * @param DOMJudgeService        $dj
++     * @param ConfigurationService   $config
++     * @param KernelInterface        $kernel
++     * @param EventLogService        $eventLogService
++     */
++    public function __construct(
++        EntityManagerInterface $em,
++        DOMJudgeService $dj,
++        ConfigurationService $config,
++        KernelInterface $kernel,
++        EventLogService $eventLogService
++    ) {
++        $this->em              = $em;
++        $this->dj              = $dj;
++        $this->config          = $config;
++        $this->eventLogService = $eventLogService;
++        $this->kernel          = $kernel;
++    }
++
++    /**
++     * @Route("", name="jury_contest_sites")
++     */
++    public function indexAction(Request $request, Packages $assetPackage)
++    {
++        $em           = $this->em;
++        $contestSites = $em->createQueryBuilder()
++            ->select('s', 'COUNT(t.teamid) AS num_teams')
++            ->from(ContestSite::class, 's')
++            ->leftJoin('s.teams', 't')
++            ->orderBy('s.sortorder', 'ASC')
++            ->addOrderBy('s.name', 'ASC')
++            ->addOrderBy('s.siteid', 'ASC')
++            ->groupBy('s.siteid')
++            ->getQuery()->getResult();
++        $table_fields = [
++            'siteid' => ['title' => 'ID', 'sort' => true],
++            'sortorder' => ['title' => 'sort', 'sort' => true, 'default_sort' => true],
++            'name' => ['title' => 'name', 'sort' => true],
++            'num_teams' => ['title' => '# teams', 'sort' => true],
++            'active' => ['title' => 'active', 'sort' => true],
++        ];
++
++        $propertyAccessor    = PropertyAccess::createPropertyAccessor();
++        $contest_sites_table = [];
++        foreach ($contestSites as $contestSiteData) {
++            /** @var ContestSite $contestSite */
++            $contestSite = $contestSiteData[0];
++            $sitedata    = [];
++            $siteactions = [];
++            // Get whatever fields we can from the site object itself
++            foreach ($table_fields as $k => $v) {
++                if ($propertyAccessor->isReadable($contestSite, $k)) {
++                    $sitedata[$k] = ['value' => $propertyAccessor->getValue($contestSite, $k)];
++                }
++            }
++
++            if ($this->isGranted('ROLE_ADMIN')) {
++                $siteactions[] = [
++                    'icon' => 'edit',
++                    'title' => 'edit this site',
++                    'link' => $this->generateUrl('jury_contest_site_edit', [
++                        'siteId' => $contestSite->getSiteid(),
++                    ])
++                ];
++                $siteactions[] = [
++                    'icon' => 'trash-alt',
++                    'title' => 'delete this site',
++                    'link' => $this->generateUrl('jury_contest_site_delete', [
++                        'siteId' => $contestSite->getSiteid(),
++                    ]),
++                    'ajaxModal' => true,
++                ];
++            }
++
++            $sitedata['num_teams'] = ['value' => $contestSiteData['num_teams']];
++            $sitedata['active']    = ['value' => $contestSite->getActive() ? 'yes' : 'no'];
++
++            $contest_sites_table[] = [
++                'data' => $sitedata,
++                'actions' => $siteactions,
++                'link' => $this->generateUrl('jury_contest_site', ['siteId' => $contestSite->getSiteid()]),
++            ];
++        }
++        return $this->render('jury/contest_sites.html.twig', [
++            'contest_sites' => $contest_sites_table,
++            'table_fields' => $table_fields,
++            'num_actions' => $this->isGranted('ROLE_ADMIN') ? 2 : 0,
++        ]);
++    }
++
++    /**
++     * @Route("/{siteId<\d+>}", name="jury_contest_site")
++     * @param Request           $request
++     * @param SubmissionService $submissionService
++     * @param int               $siteId
++     * @return \Symfony\Component\HttpFoundation\Response
++     * @throws \Doctrine\ORM\NoResultException
++     * @throws \Doctrine\ORM\NonUniqueResultException
++     */
++    public function viewAction(Request $request, SubmissionService $submissionService, int $siteId)
++    {
++        /** @var ContestSite $contestSite */
++        $contestSite = $this->em->getRepository(ContestSite::class)->find($siteId);
++        if (!$contestSite) {
++            throw new NotFoundHttpException(sprintf('Contest site with ID %s not found', $siteId));
++        }
++
++        $restrictions = ['siteid' => $contestSite->getSiteid()];
++        /** @var Submission[] $submissions */
++        list($submissions, $submissionCounts) = $submissionService->getSubmissionList(
++            $this->dj->getCurrentContests(),
++            $restrictions
++        );
++
++        $data = [
++            'contestSite' => $contestSite,
++            'submissions' => $submissions,
++            'submissionCounts' => $submissionCounts,
++            'showContest' => count($this->dj->getCurrentContests()) > 1,
++            'refresh' => [
++                'after' => 15,
++                'url' => $this->generateUrl('jury_contest_site', ['siteId' => $contestSite->getSiteid()]),
++                'ajax' => true,
++            ],
++        ];
++
++        // For ajax requests, only return the submission list partial
++        if ($request->isXmlHttpRequest()) {
++            $data['showTestcases'] = false;
++            return $this->render('jury/partials/submission_list.html.twig', $data);
++        }
++
++        return $this->render('jury/contest_site.html.twig', $data);
++    }
++
++    /**
++     * @Route("/{siteId<\d+>}/edit", name="jury_contest_site_edit")
++     * @IsGranted("ROLE_ADMIN")
++     * @param Request $request
++     * @param int     $siteId
++     * @return \Symfony\Component\HttpFoundation\RedirectResponse|\Symfony\Component\HttpFoundation\Response
++     * @throws \Exception
++     */
++    public function editAction(Request $request, int $siteId)
++    {
++        /** @var ContestSite $contestSite */
++        $contestSite = $this->em->getRepository(ContestSite::class)->find($siteId);
++        if (!$contestSite) {
++            throw new NotFoundHttpException(sprintf('Contest site with ID %s not found', $siteId));
++        }
++
++        $form = $this->createForm(ContestSiteType::class, $contestSite);
++
++        $form->handleRequest($request);
++
++        if ($form->isSubmitted() && $form->isValid()) {
++            $this->saveEntity($this->em, $this->eventLogService, $this->dj, $contestSite,
++                              $contestSite->getSiteid(), false);
++            return $this->redirectToRoute('jury_contest_site', ['siteId' => $contestSite->getSiteid()]);
++        }
++
++        return $this->render('jury/contest_site_edit.html.twig', [
++            'contestSite' => $contestSite,
++            'form' => $form->createView(),
++        ]);
++    }
++
++    /**
++     * @Route("/{siteId<\d+>}/delete", name="jury_contest_site_delete")
++     * @IsGranted("ROLE_ADMIN")
++     * @param Request $request
++     * @param int     $siteId
++     * @return \Symfony\Component\HttpFoundation\RedirectResponse|\Symfony\Component\HttpFoundation\Response
++     * @throws \Exception
++     */
++    public function deleteAction(Request $request, int $siteId)
++    {
++        /** @var ContestSite $contestSite */
++        $contestSite = $this->em->getRepository(ContestSite::class)->find($siteId);
++        if (!$contestSite) {
++            throw new NotFoundHttpException(sprintf('Contest site with ID %s not found', $siteId));
++        }
++
++        return $this->deleteEntity($request, $this->em, $this->dj, $this->kernel, $contestSite,
++                                   $contestSite->getName(), $this->generateUrl('jury_contest_sites'));
++    }
++
++    /**
++     * @Route("/add", name="jury_contest_site_add")
++     * @IsGranted("ROLE_ADMIN")
++     * @param Request $request
++     * @return \Symfony\Component\HttpFoundation\Response
++     * @throws \Exception
++     */
++    public function addAction(Request $request)
++    {
++        $contestSite = new ContestSite();
++
++        $form = $this->createForm(ContestSiteType::class, $contestSite);
++
++        $form->handleRequest($request);
++
++        if ($form->isSubmitted() && $form->isValid()) {
++            $this->em->persist($contestSite);
++            $this->saveEntity($this->em, $this->eventLogService, $this->dj, $contestSite,
++                              $contestSite->getSiteid(), true);
++            return $this->redirectToRoute('jury_contest_site', ['siteId' => $contestSite->getSiteid()]);
++        }
++
++        return $this->render('jury/contest_site_add.html.twig', [
++            'form' => $form->createView(),
++        ]);
++    }
++}
+diff --git a/webapp/src/Form/Type/ContestSiteType.php b/webapp/src/Form/Type/ContestSiteType.php
+new file mode 100644
+index 000000000..691b9f95a
+--- /dev/null
++++ b/webapp/src/Form/Type/ContestSiteType.php
+@@ -0,0 +1,34 @@
++<?php declare(strict_types=1);
++
++namespace App\Form\Type;
++
++use App\Entity\ContestSite;
++use Symfony\Component\Form\AbstractType;
++use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
++use Symfony\Component\Form\Extension\Core\Type\IntegerType;
++use Symfony\Component\Form\Extension\Core\Type\SubmitType;
++use Symfony\Component\Form\FormBuilderInterface;
++use Symfony\Component\OptionsResolver\OptionsResolver;
++
++class ContestSiteType extends AbstractType
++{
++    public function buildForm(FormBuilderInterface $builder, array $options)
++    {
++        $builder->add('name');
++        $builder->add('sortorder', IntegerType::class);
++        $builder->add('active', ChoiceType::class, [
++            'expanded' => true,
++            'choices' => [
++                'Yes' => true,
++                'No' => false,
++            ],
++        ]);
++        $builder->add('save', SubmitType::class);
++    }
++
++
++    public function configureOptions(OptionsResolver $resolver)
++    {
++        $resolver->setDefaults(['data_class' => ContestSite::class]);
++    }
++}
+diff --git a/webapp/src/Service/SubmissionService.php b/webapp/src/Service/SubmissionService.php
+index 58583200d..fbee31e27 100644
+--- a/webapp/src/Service/SubmissionService.php
++++ b/webapp/src/Service/SubmissionService.php
+@@ -87,6 +87,7 @@ class SubmissionService
+      *                  original result in final verdict. Vice versa if false.
+      * - teamid: ID of a team to filter on
+      * - categoryid: ID of a team category to filter on
++     * - siteid: ID of a contest site to filter on
+      * - probid: ID of a problem to filter on
+      * - langid: ID of a language to filter on
+      * - judgehost: hostname of a judgehost to filter on
+@@ -203,6 +204,12 @@ class SubmissionService
+                 ->setParameter(':categoryid', $restrictions['categoryid']);
+         }
+ 
++        if (isset($restrictions['siteid'])) {
++            $queryBuilder
++                ->andWhere('t.siteid = :siteid')
++                ->setParameter(':siteid', $restrictions['siteid']);
++        }
++
+         if (isset($restrictions['probid'])) {
+             $queryBuilder
+                 ->andWhere('s.probid = :probid')
+diff --git a/webapp/templates/jury/contest_site.html.twig b/webapp/templates/jury/contest_site.html.twig
+new file mode 100644
+index 000000000..3681ab893
+--- /dev/null
++++ b/webapp/templates/jury/contest_site.html.twig
+@@ -0,0 +1,81 @@
++{% extends "jury/base.html.twig" %}
++{% import "jury/jury_macros.twig" as macros %}
++
++{% block title %}Site {{ contestSite.siteid }} - {{ parent() }}{% endblock %}
++
++{% block extrahead %}
++    {{ parent() }}
++    {{ macros.table_extrahead() }}
++{% endblock %}
++
++{% block content %}
++
++    <h1>Site {{ contestSite.siteid }}</h1>
++
++    <div class="row">
++        <div class="col-lg-4">
++            <table class="table table-sm table-striped">
++                <tr>
++                    <th>ID</th>
++                    <td>{{ contestSite.siteid }}</td>
++                </tr>
++                <tr>
++                    <th>Name</th>
++                    <td>{{ contestSite.name }}</td>
++                </tr>
++                <tr>
++                    <th>Sortorder</th>
++                    <td>{{ contestSite.sortorder }}</td>
++                </tr>
++                <tr>
++                    <th>Active</th>
++                    <td>{{ contestSite.active | printYesNo }}</td>
++                </tr>
++            </table>
++        </div>
++    </div>
++
++    {%- if is_granted('ROLE_ADMIN') -%}
++        <p>
++            {{ button(path('jury_contest_site_edit', {'siteId': contestSite.siteid}), 'Edit', 'primary', 'edit') }}
++            {{ button(path('jury_contest_site_delete', {'siteId': contestSite.siteid}), 'Delete', 'danger', 'trash-alt', true) }}
++        </p>
++    {% endif %}
++
++    <h2>Teams in {{ contestSite.name }}</h2>
++    {% if contestSite.teams is empty %}
++        <p class="nodata">no teams</p>
++    {% else %}
++        <div class="row">
++            <div class="col-lg-4">
++                <table class="data-table table table-sm table-striped table-hover">
++                    <thead>
++                    <tr>
++                        <th>ID</th>
++                        <th>Teamname</th>
++                    </tr>
++                    </thead>
++                    <tbody>
++                    {% for team in contestSite.teams %}
++                        <tr>
++                            <td>
++                                <a href="{{ path('jury_team', {'teamId': team.teamid}) }}">{{ team.teamid }}</a>
++                            </td>
++                            <td>
++                                <a href="{{ path('jury_team', {'teamId': team.teamid}) }}">{{ team.effectiveName }}</a>
++                            </td>
++                        </tr>
++                    {% endfor %}
++                    </tbody>
++                </table>
++            </div>
++        </div>
++
++        <h2>Submissions for {{ contestSite.name }}</h2>
++
++        <div data-ajax-refresh-target>
++            {%- include 'jury/partials/submission_list.html.twig' with {showTestcases: false} %}
++        </div>
++    {% endif %}
++
++{% endblock %}
+diff --git a/webapp/templates/jury/contest_site_add.html.twig b/webapp/templates/jury/contest_site_add.html.twig
+new file mode 100644
+index 000000000..bea51de9b
+--- /dev/null
++++ b/webapp/templates/jury/contest_site_add.html.twig
+@@ -0,0 +1,12 @@
++{% extends "jury/base.html.twig" %}
++{% import "jury/jury_macros.twig" as macros %}
++
++{% block title %}Add site - {{ parent() }}{% endblock %}
++
++{% block content %}
++
++    <h1>Add site</h1>
++
++    {% include 'jury/partials/contest_site_form.html.twig' %}
++
++{% endblock %}
+diff --git a/webapp/templates/jury/contest_site_edit.html.twig b/webapp/templates/jury/contest_site_edit.html.twig
+new file mode 100644
+index 000000000..6d703e33d
+--- /dev/null
++++ b/webapp/templates/jury/contest_site_edit.html.twig
+@@ -0,0 +1,12 @@
++{% extends "jury/base.html.twig" %}
++{% import "jury/jury_macros.twig" as macros %}
++
++{% block title %}Edit site {{ contestSite.siteid }} - {{ parent() }}{% endblock %}
++
++{% block content %}
++
++    <h1>Edit site {{ contestSite.siteid }}</h1>
++
++    {% include 'jury/partials/contest_site_form.html.twig' %}
++
++{% endblock %}
+diff --git a/webapp/templates/jury/contest_sites.html.twig b/webapp/templates/jury/contest_sites.html.twig
+new file mode 100644
+index 000000000..8881f369c
+--- /dev/null
++++ b/webapp/templates/jury/contest_sites.html.twig
+@@ -0,0 +1,23 @@
++{% extends "jury/base.html.twig" %}
++{% import "jury/jury_macros.twig" as macros %}
++
++{% block title %}Sites - {{ parent() }}{% endblock %}
++
++{% block extrahead %}
++    {{ parent() }}
++    {{ macros.table_extrahead() }}
++{% endblock %}
++
++{% block content %}
++
++    <h1>Sites</h1>
++
++    {{ macros.table(contest_sites, table_fields, num_actions) }}
++
++    {% if is_granted('ROLE_ADMIN') %}
++        <p>
++            {{ button(path('jury_contest_site_add'), 'Add new site', 'primary', 'plus') }}
++        </p>
++    {% endif %}
++
++{% endblock %}
+diff --git a/webapp/templates/jury/index.html.twig b/webapp/templates/jury/index.html.twig
+index 66f2360b6..6d5e2b1d9 100644
+--- a/webapp/templates/jury/index.html.twig
++++ b/webapp/templates/jury/index.html.twig
+@@ -35,6 +35,7 @@
+                     <li><a href="{{ path('jury_users') }}">Users</a></li>
+                     <li><a href="{{ path('jury_teams') }}">Teams</a></li>
+                     <li><a href="{{ path('jury_team_categories') }}">Team Categories</a></li>
++                    <li><a href="{{ path('jury_contest_sites') }}">Contest Sites</a></li>
+                     <li><a href="{{ path('jury_team_affiliations') }}">Team Affiliations</a></li>
+                 </ul>
+             </div>
+diff --git a/webapp/templates/jury/partials/contest_site_form.html.twig b/webapp/templates/jury/partials/contest_site_form.html.twig
+new file mode 100644
+index 000000000..af8bfae8c
+--- /dev/null
++++ b/webapp/templates/jury/partials/contest_site_form.html.twig
+@@ -0,0 +1,9 @@
++<div class="row">
++    <div class="col-lg-4">
++        {{ form_start(form) }}
++        {{ form_row(form.name) }}
++        {{ form_row(form.sortorder) }}
++        {{ form_row(form.active) }}
++        {{ form_end(form) }}
++    </div>
++</div>
+-- 
+2.20.1
+

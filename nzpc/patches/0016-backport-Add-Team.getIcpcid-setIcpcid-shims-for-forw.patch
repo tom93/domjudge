@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 12 Jun 2020 03:03:24 +1200
+Subject: backport: Add Team.getIcpcid/setIcpcid shims for forward
+ compatibility
+
+The property team.externalid was renamed to team.icpcid in commit
+0356a0469.
+---
+ webapp/src/Entity/Team.php | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/webapp/src/Entity/Team.php b/webapp/src/Entity/Team.php
+index b20bc6bea..24d3f6595 100644
+--- a/webapp/src/Entity/Team.php
++++ b/webapp/src/Entity/Team.php
+@@ -234,6 +234,18 @@ class Team extends BaseApiEntity implements ExternalRelationshipEntityInterface
+         return $this->externalid;
+     }
+ 
++    // forward compatibility: externalid was renamed to icpcid in commit 0356a04691d230c92737f1894d23e21572b9250f
++
++    public function setIcpcid($icpcid)
++    {
++        return $this->setExternalid($icpcid);
++    }
++
++    public function getIcpcid()
++    {
++        return $this->getExternalid();
++    }
++
+     /**
+      * Set name
+      *
+-- 
+2.20.1
+

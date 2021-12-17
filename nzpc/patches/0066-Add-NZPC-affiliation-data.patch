@@ -1,0 +1,87 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Wed, 8 Apr 2020 03:27:07 +1200
+Subject: Add NZPC affiliation data
+
+---
+ sql/Makefile                     |  2 ++
+ sql/files/nzpc-organizations.tsv | 54 ++++++++++++++++++++++++++++++++
+ 2 files changed, 56 insertions(+)
+ create mode 100644 sql/files/nzpc-organizations.tsv
+
+diff --git a/sql/Makefile b/sql/Makefile
+index c09cbc078..9fe3451ef 100644
+--- a/sql/Makefile
++++ b/sql/Makefile
+@@ -40,6 +40,8 @@ install-domserver: $(ZIPFILES) $(TOPDIR)/doc/examples/.pdf-generated
+ 		files/defaultdata/*.zip
+ 	$(INSTALL_DATA) -t $(DESTDIR)$(domserver_sqldir)/files/examples \
+ 		files/examples/*.zip
++	$(INSTALL_DATA) -t $(DESTDIR)$(domserver_sqldir)/files \
++		files/nzpc-organizations.tsv
+ 
+ # Make $(CONFSTUB) a dependency, and the other stuff sub-rules to make
+ # sure that config.h already exists when creating the zipfiles.
+diff --git a/sql/files/nzpc-organizations.tsv b/sql/files/nzpc-organizations.tsv
+new file mode 100644
+index 000000000..933a490ee
+--- /dev/null
++++ b/sql/files/nzpc-organizations.tsv
+@@ -0,0 +1,54 @@
++KBC	(Combined school team)
++ACG Parnel	ACG Parnell College
++Ara	Ara Institute of Canterbury
++Ash Coll	Ashburton College
++AGS	Auckland Grammar School
++AIC	Auckland International College
++AUT	Auckland University of Technology
++Av Col	Avondale College
++BDSC	Botany Downs Secondary College
++BurnsideHS	Burnside High School
++Cashmere H	Cashmere High School
++Christ's	Christ's College
++Columba	Columba College
++EIT	Eastern Institute of Technology
++EGGS	Epsom Girls Grammar School
++Fraser HS	Fraser High School
++HBHS	Hamilton Boys' High School
++HHS	Hillcrest High School
++Howick Col	Howick College
++Ind	Independent
++JHC	James Hargest College
++JMCG	John McGlashan College
++Kristin	Kristin School
++LBC	Long Bay College
++Lynfield	Lynfield College
++Middleton	Middleton Grange School
++MRGS	Mount Roskill Grammar School
++Mozilla	Mozilla
++MAGS	Mt Albert Grammar School
++Navman	Navman Technology NZ Ltd.
++NPBHS	New Plymouth Boys' High School
++Onslow	Onslow College
++OSC	Ormiston Senior College
++PN Int	Palmerston North Intermediate Normal School
++PHS	Papanui High School
++Rangitoto	Rangitoto College
++SKC	Saint Kentigern College
++Samuel Mar	Samuel Marsden Whitby
++Queenstown	SIT Queenstown Campus
++SIT	Southern Institute of Technology
++St Johns	St Johns College
++SPC	St. Paul's Collegiate
++SunCo	Sunderland College
++TBC	Tauranga Boys' College
++Tawa	Tawa College
++U Auckland	University of Auckland
++U Cantab	University of Canterbury
++Otago	University of Otago
++U Waikato	University of Waikato
++Waitakere	Waitakere College
++WHS	Wellington High School
++WBHS	Westlake Boys High School
++WA	Whampoa Academy
++Whitireia	Whitireia New Zealand
+-- 
+2.20.1
+

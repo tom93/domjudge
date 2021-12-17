@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 18 Aug 2020 09:32:31 +1200
+Subject: Update NZPC affiliation data
+
+---
+ sql/files/organizations-nzpc.tsv | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/sql/files/organizations-nzpc.tsv b/sql/files/organizations-nzpc.tsv
+index 933a490ee..49b66dee3 100644
+--- a/sql/files/organizations-nzpc.tsv
++++ b/sql/files/organizations-nzpc.tsv
+@@ -1,5 +1,7 @@
+-KBC	(Combined school team)
++Comb	(Combined school team)
++X	(not listed)
+ ACG Parnel	ACG Parnell College
++Strath	ACG Strathallan
+ Ara	Ara Institute of Canterbury
+ Ash Coll	Ashburton College
+ AGS	Auckland Grammar School
+@@ -29,6 +31,7 @@ Mozilla	Mozilla
+ MAGS	Mt Albert Grammar School
+ Navman	Navman Technology NZ Ltd.
+ NPBHS	New Plymouth Boys' High School
++Newlands C	Newlands College
+ Onslow	Onslow College
+ OSC	Ormiston Senior College
+ PN Int	Palmerston North Intermediate Normal School
+-- 
+2.20.1
+
