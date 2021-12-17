@@ -1,0 +1,146 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 24 Jul 2020 08:00:27 +1200
+Subject: Speed up chown in Docker
+
+Recursive chown is slow in Docker because of the copy-on-write
+filesystem.[1]
+
+Avoid chown by creating files with correct ownership where possible.
+
+Where it is not possible (specifically "ADD domjudge.tar.gz" because
+the owner in the archive is arbitrary and can't be overridden[2]),
+optimise the case where the files already have the correct ownership.
+
+[1] https://github.com/docker/for-linux issue 388
+[2] https://github.com/moby/moby issue 35525
+---
+ docker/domserver/Dockerfile       | 20 ++++++++++++--------
+ docker/domserver/build.sh         |  1 -
+ docker/judgehost/Dockerfile       |  9 +++++----
+ docker/judgehost/Dockerfile.build |  6 ++++--
+ docker/judgehost/build.sh         |  2 +-
+ 5 files changed, 22 insertions(+), 16 deletions(-)
+
+diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
+index 6a54c5480..b0880704a 100644
+--- a/docker/domserver/Dockerfile
++++ b/docker/domserver/Dockerfile
+@@ -31,11 +31,13 @@ ADD https://getcomposer.org/installer composer-setup.php
+ RUN php composer-setup.php \
+     && mv /composer.phar /usr/local/bin/composer
+ 
+-# Add DOMjudge source code and build script
++# Add DOMjudge source code
+ ADD domjudge.tar.gz /domjudge-src
+-ADD domserver/build.sh /domjudge-src
++RUN find /domjudge-src/domjudge* '(' ! -user domjudge -o ! -group domjudge ')' -execdir \
++	chown domjudge:domjudge {} +
+ 
+ # Build and install domserver
++ADD domserver/build.sh /domjudge-src
+ RUN /domjudge-src/build.sh
+ 
+ # Now create an image with the actual build in it
+@@ -62,20 +64,22 @@ RUN apt-get update \
+ 	enscript lpr \
+ 	&& rm -rf /var/lib/apt/lists/*
+ 
++# Set up user
++RUN useradd -m domjudge
++
+ # Install composer
+ ADD https://getcomposer.org/installer composer-setup.php
+ RUN php composer-setup.php \
+     && mv /composer.phar /usr/local/bin/composer
+ 
+ # Copy domserver directory and add script files
+-COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
+-COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
++RUN mkdir /opt/domjudge && chown domjudge: /opt/domjudge
++COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjudge/domserver
++COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
+ COPY ["domserver/scripts", "/scripts/"]
+ 
+-# Add user, create PHP FPM socket dir, change permissions for domjudge directory and fix scripts
+-RUN useradd -m domjudge \
+-	&& mkdir -p /run/php \
+-	&& chown -R domjudge: /opt/domjudge \
++# Create PHP FPM socket dir, change permissions for some domjudge directories and fix scripts
++RUN mkdir -p /run/php \
+ 	&& chown -R www-data: /opt/domjudge/domserver/tmp \
+ 	# for DOMjudge <= 7.2 (submitdir was removed in commit DOMjudge/domjudge@d66725038)
+ 	&& if [ -d /opt/domjudge/domserver/submissions ]; then chown -R www-data: /opt/domjudge/domserver/submissions; fi \
+diff --git a/docker/domserver/build.sh b/docker/domserver/build.sh
+index f616c9e7b..7787d6b30 100755
+--- a/docker/domserver/build.sh
++++ b/docker/domserver/build.sh
+@@ -1,7 +1,6 @@
+ #!/bin/bash -e
+ 
+ cd /domjudge-src/domjudge*
+-chown -R domjudge: .
+ sudo -u domjudge ./configure -with-baseurl=http://localhost/
+ 
+ # Passwords should not be included in the built image. We create empty files here to prevent passwords from being generated.
+diff --git a/docker/judgehost/Dockerfile b/docker/judgehost/Dockerfile
+index a9f7e7d82..96eea8632 100644
+--- a/docker/judgehost/Dockerfile
++++ b/docker/judgehost/Dockerfile
+@@ -19,6 +19,9 @@ RUN apt-get update \
+ 	gcc g++ default-jre-headless default-jdk-headless ghc fp-compiler \
+ 	&& rm -rf /var/lib/apt/lists/*
+ 
++# Set up user
++RUN useradd -m domjudge
++
+ # Add chroot and judgehost data
+ ADD chroot.tar.gz /
+ ADD judgehost.tar.gz /
+@@ -27,8 +30,6 @@ RUN cp /opt/domjudge/judgehost/etc/sudoers-domjudge /etc/sudoers.d/
+ # Add scripts
+ COPY ["judgehost/scripts", "/scripts/"]
+ 
+-# Change start script permissions, add user and fix permissions
+-RUN chmod +x /scripts/start.sh \
+-	&& useradd -m domjudge \
+-	&& chown -R domjudge: /opt/domjudge
++# Change start script permissions
++RUN chmod +x /scripts/start.sh
+ CMD ["/scripts/start.sh"]
+diff --git a/docker/judgehost/Dockerfile.build b/docker/judgehost/Dockerfile.build
+index 8783e8bd3..3fdbeb30d 100644
+--- a/docker/judgehost/Dockerfile.build
++++ b/docker/judgehost/Dockerfile.build
+@@ -23,11 +23,13 @@ ADD https://getcomposer.org/installer composer-setup.php
+ RUN php composer-setup.php \
+     && mv /composer.phar /usr/local/bin/composer
+ 
+-# Add DOMjudge source code and build script
++# Add DOMjudge source code
+ ADD domjudge.tar.gz /domjudge-src
+-ADD judgehost/build.sh /domjudge-src
++RUN find /domjudge-src/domjudge* '(' ! -user domjudge -o ! -group domjudge ')' -execdir \
++	chown domjudge:domjudge {} +
+ 
+ # Build and install judgehost
++ADD judgehost/build.sh /domjudge-src
+ RUN /domjudge-src/build.sh
+ 
+ # We need to mount proc, which is not possible in "docker build". Thus we need to run this when starting the container
+diff --git a/docker/judgehost/build.sh b/docker/judgehost/build.sh
+index 8ddaf980a..3560c8fb1 100755
+--- a/docker/judgehost/build.sh
++++ b/docker/judgehost/build.sh
+@@ -2,7 +2,7 @@
+ 
+ cd /domjudge-src/domjudge*
+ echo "default	http://localhost/api	dummy	dummy" > etc/restapi.secret
+-chown -R domjudge: .
++chown domjudge: etc/restapi.secret
+ sudo -u domjudge ./configure -with-baseurl=http://localhost/
+ sudo -u domjudge make judgehost
+ make install-judgehost
+-- 
+2.20.1
+

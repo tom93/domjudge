@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 28 Jul 2020 06:48:37 +1200
+Subject: Switch to headless JDK
+
+This is what the manual now suggests, and it's more consistent with
+dj_make_chroot which uses default-jre-headless.
+---
+ docker/judgehost/Dockerfile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/docker/judgehost/Dockerfile b/docker/judgehost/Dockerfile
+index 99b7ce8b5..a9f7e7d82 100644
+--- a/docker/judgehost/Dockerfile
++++ b/docker/judgehost/Dockerfile
+@@ -16,7 +16,7 @@ RUN apt-get update \
+ 	acl zip unzip supervisor sudo procps libcgroup1 \
+ 	php-cli php-zip php-gd php-curl php-mysql php-json \
+ 	php-gmp php-xml php-mbstring python3 \
+-	gcc g++ default-jre-headless default-jdk ghc fp-compiler \
++	gcc g++ default-jre-headless default-jdk-headless ghc fp-compiler \
+ 	&& rm -rf /var/lib/apt/lists/*
+ 
+ # Add chroot and judgehost data
+-- 
+2.20.1
+

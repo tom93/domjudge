@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Thu, 23 Jul 2020 05:16:07 +1200
+Subject: Abort on errors in chroot-and-tar.sh when building judgehost docker
+ image
+
+---
+ docker/judgehost/chroot-and-tar.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/docker/judgehost/chroot-and-tar.sh b/docker/judgehost/chroot-and-tar.sh
+index 542319a41..4e2b12ea5 100755
+--- a/docker/judgehost/chroot-and-tar.sh
++++ b/docker/judgehost/chroot-and-tar.sh
+@@ -1,4 +1,4 @@
+-#!/bin/bash
++#!/bin/bash -e
+ /opt/domjudge/judgehost/bin/dj_make_chroot
+ 
+ cd /
+-- 
+2.20.1
+

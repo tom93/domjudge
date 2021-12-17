@@ -1,0 +1,80 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 5 Sep 2021 11:54:12 +1200
+Subject: Use debian:10 instead of debian:latest as base image in dockerfiles
+
+Debian 11 was released recently, and debian:latest now refers to it.
+The scripts don't work on Debian 11 (PHP's version changed from 7.3 to
+7.4, but docker/domserver/scripts/start.sh has hard-coded references
+to 7.3). Stay on Debian 10 for now.
+---
+ docker/domserver/Dockerfile        | 4 ++--
+ docker/domserver/Dockerfile.source | 4 ++--
+ docker/judgehost/Dockerfile        | 2 +-
+ docker/judgehost/Dockerfile.build  | 2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
+index ba388cd10..de3ec34b8 100644
+--- a/docker/domserver/Dockerfile
++++ b/docker/domserver/Dockerfile
+@@ -1,4 +1,4 @@
+-FROM debian:latest AS domserver-build
++FROM debian:10 AS domserver-build
+ MAINTAINER DOMjudge team <team@domjudge.org>
+ 
+ ENV DEBIAN_FRONTEND=noninteractive
+@@ -41,7 +41,7 @@ ADD domserver/build.sh /domjudge-src
+ RUN /domjudge-src/build.sh
+ 
+ # Now create an image with the actual build in it
+-FROM debian:latest
++FROM debian:10
+ MAINTAINER DOMjudge team <team@domjudge.org>
+ 
+ ENV DEBIAN_FRONTEND=noninteractive \
+diff --git a/docker/domserver/Dockerfile.source b/docker/domserver/Dockerfile.source
+index 7660a4f13..4860d28fb 100644
+--- a/docker/domserver/Dockerfile.source
++++ b/docker/domserver/Dockerfile.source
+@@ -15,7 +15,7 @@
+ # docker run --rm domjudge/dist:<VERSION> tar cz -C /domjudge-src domjudge > docker/domjudge.tar.gz
+ # docker rmi domjudge/dist:<VERSION>
+ 
+-FROM debian:latest AS dist
++FROM debian:10 AS dist
+ MAINTAINER DOMjudge team <team@domjudge.org>
+ 
+ ENV DEBIAN_FRONTEND=noninteractive
+@@ -66,7 +66,7 @@ ADD docker/domserver/build.sh /domjudge-src
+ RUN /domjudge-src/build.sh
+ 
+ # Now create an image with the actual build in it
+-FROM debian:latest
++FROM debian:10
+ MAINTAINER DOMjudge team <team@domjudge.org>
+ 
+ ENV DEBIAN_FRONTEND=noninteractive \
+diff --git a/docker/judgehost/Dockerfile b/docker/judgehost/Dockerfile
+index eb8396737..0c963b722 100644
+--- a/docker/judgehost/Dockerfile
++++ b/docker/judgehost/Dockerfile
+@@ -1,4 +1,4 @@
+-FROM debian:latest
++FROM debian:10
+ MAINTAINER DOMjudge team <team@domjudge.org>
+ 
+ ENV DEBIAN_FRONTEND=noninteractive \
+diff --git a/docker/judgehost/Dockerfile.build b/docker/judgehost/Dockerfile.build
+index 3fdbeb30d..ca3216ede 100644
+--- a/docker/judgehost/Dockerfile.build
++++ b/docker/judgehost/Dockerfile.build
+@@ -1,4 +1,4 @@
+-FROM debian:latest
++FROM debian:10
+ MAINTAINER DOMjudge team <team@domjudge.org>
+ 
+ ENV DEBIAN_FRONTEND=noninteractive
+-- 
+2.20.1
+

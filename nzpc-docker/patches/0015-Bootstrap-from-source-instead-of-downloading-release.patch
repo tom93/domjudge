@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 21 Jul 2020 05:48:15 +1200
+Subject: Bootstrap from source instead of downloading release tarball in
+ docker build script
+
+---
+ docker/build.sh | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/docker/build.sh b/docker/build.sh
+index ce6454119..94dd8f1d5 100755
+--- a/docker/build.sh
++++ b/docker/build.sh
+@@ -8,6 +8,7 @@ then
+ 	exit 1
+ fi
+ 
++if false; then
+ URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
+ FILE=domjudge.tar.gz
+ 
+@@ -20,6 +21,14 @@ then
+ fi
+ 
+ echo "[ok] DOMjudge version ${VERSION} downloaded as domjudge.tar.gz"; echo
++fi
++
++echo "[..] Boostrapping..."
++tar c -C .. --exclude=./.git --exclude="./docker/*.tar.gz" . |
++	docker build --target=dist -t domjudge/dist:${VERSION} -f docker/domserver/Dockerfile.source -
++docker run --rm domjudge/dist:${VERSION} tar cz -C /domjudge-src domjudge > domjudge.tar.gz
++docker rmi --no-prune domjudge/dist:${VERSION}
++echo "[ok] Done boostrapping"
+ 
+ echo "[..] Building Docker image for domserver using intermediate build image..."
+ docker build -t domjudge/domserver:${VERSION} -f domserver/Dockerfile .
+-- 
+2.20.1
+

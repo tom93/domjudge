@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 24 Jul 2020 09:32:13 +1200
+Subject: Revert "Download PHP dependencies earlier in Dockerfile to improve
+ build caching"
+
+Building from source will be re-added as a separate Dockerfile soon.
+
+This reverts commit bd0d46588f9119f9d047c7116f0db86cd1b6bf41.
+---
+ docker/domserver/Dockerfile | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
+index 9814706b9..b218ece97 100644
+--- a/docker/domserver/Dockerfile
++++ b/docker/domserver/Dockerfile
+@@ -31,11 +31,6 @@ ADD https://getcomposer.org/installer composer-setup.php
+ RUN php composer-setup.php \
+     && mv /composer.phar /usr/local/bin/composer
+ 
+-# Install PHP dependencies
+-# (also done by 'make dist', but we do it here *before* adding the rest of the source to leverage the build cache)
+-COPY composer.json composer.lock /domjudge-src/domjudge/
+-RUN cd /domjudge-src/domjudge && composer install --prefer-dist -o --no-scripts
+-
+ # Add DOMjudge source code and build script
+ COPY . /domjudge-src/domjudge
+ ADD docker/domserver/build.sh /domjudge-src
+-- 
+2.20.1
+

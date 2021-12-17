@@ -1,0 +1,60 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 5 Sep 2021 08:01:15 +1200
+Subject: Revert "Force Composer 1 to be downloaded in the dockerfiles"
+
+This reverts commit 8df88d3324359dae573da9d37df9251ca2015442.
+
+Now that the packages have been updated, Composer 2 works.
+---
+ docker/domserver/Dockerfile        | 4 ++--
+ docker/domserver/Dockerfile.source | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
+index fc84b03ad..3be84dd2b 100644
+--- a/docker/domserver/Dockerfile
++++ b/docker/domserver/Dockerfile
+@@ -30,7 +30,7 @@ RUN useradd -m domjudge
+ 
+ # Install composer
+ ADD https://getcomposer.org/installer composer-setup.php
+-RUN php composer-setup.php --1 \
++RUN php composer-setup.php \
+     && mv /composer.phar /usr/local/bin/composer
+ 
+ # Add DOMjudge source code
+@@ -71,7 +71,7 @@ RUN useradd -m domjudge
+ 
+ # Install composer
+ ADD https://getcomposer.org/installer composer-setup.php
+-RUN php composer-setup.php --1 \
++RUN php composer-setup.php \
+     && mv /composer.phar /usr/local/bin/composer
+ 
+ # Copy domserver directory and add script files
+diff --git a/docker/domserver/Dockerfile.source b/docker/domserver/Dockerfile.source
+index 1083c6a34..ccbefc5e8 100644
+--- a/docker/domserver/Dockerfile.source
++++ b/docker/domserver/Dockerfile.source
+@@ -47,7 +47,7 @@ RUN useradd -m domjudge
+ 
+ # Install composer
+ ADD https://getcomposer.org/installer composer-setup.php
+-RUN php composer-setup.php --1 \
++RUN php composer-setup.php \
+     && mv /composer.phar /usr/local/bin/composer
+ 
+ # Install PHP dependencies
+@@ -96,7 +96,7 @@ RUN useradd -m domjudge
+ 
+ # Install composer
+ ADD https://getcomposer.org/installer composer-setup.php
+-RUN php composer-setup.php --1 \
++RUN php composer-setup.php \
+     && mv /composer.phar /usr/local/bin/composer
+ 
+ # Copy domserver directory and add script files
+-- 
+2.20.1
+

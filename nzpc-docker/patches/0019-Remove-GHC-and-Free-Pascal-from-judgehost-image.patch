@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Tue, 28 Jul 2020 06:56:04 +1200
+Subject: Remove GHC and Free Pascal from judgehost image
+
+---
+ docker/judgehost/Dockerfile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/docker/judgehost/Dockerfile b/docker/judgehost/Dockerfile
+index e5d05ffb0..eb8396737 100644
+--- a/docker/judgehost/Dockerfile
++++ b/docker/judgehost/Dockerfile
+@@ -16,7 +16,7 @@ RUN apt-get update \
+ 	acl zip unzip supervisor sudo procps libcgroup1 \
+ 	php-cli php-zip php-gd php-curl php-mysql php-json \
+ 	php-gmp php-xml php-mbstring python3 \
+-	gcc g++ default-jre-headless default-jdk-headless ghc fp-compiler \
++	gcc g++ default-jre-headless default-jdk-headless \
+ 	mono-mcs \
+ 	&& rm -rf /var/lib/apt/lists/*
+ 
+-- 
+2.20.1
+

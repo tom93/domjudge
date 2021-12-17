@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Wed, 8 Apr 2020 01:39:34 +1200
+Subject: Allow dj_setup_database install command to be specified when using
+ Dockerfile
+
+Replace the environment variable DJ_DB_INSTALL_BARE (which switched
+between 'install' and 'bare-install') with an environment variable
+DJ_DB_INSTALL that can be set to any command name.
+---
+ docker/domserver/Dockerfile       | 2 +-
+ docker/domserver/scripts/start.sh | 6 +-----
+ 2 files changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
+index 2ef9ec4be..9f7420e65 100644
+--- a/docker/domserver/Dockerfile
++++ b/docker/domserver/Dockerfile
+@@ -60,7 +60,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
+ 	MYSQL_PASSWORD=domjudge \
+ 	MYSQL_ROOT_PASSWORD=domjudge \
+ 	FPM_MAX_CHILDREN=40 \
+-	DJ_DB_INSTALL_BARE=0
++	DJ_DB_INSTALL=install
+ 
+ # Install required packages for running of domserver
+ RUN apt-get update \
+diff --git a/docker/domserver/scripts/start.sh b/docker/domserver/scripts/start.sh
+index d73936eaf..e834a7c30 100644
+--- a/docker/domserver/scripts/start.sh
++++ b/docker/domserver/scripts/start.sh
+@@ -145,11 +145,7 @@ fi
+ if ! bin/dj_setup_database -uroot -p${MYSQL_ROOT_PASSWORD} status > /dev/null 2>&1
+ then
+ 	echo "  Database not installed; installing..."
+-	INSTALL=install
+-	if [ "${DJ_DB_INSTALL_BARE}" -eq "1" ]
+-	then
+-		INSTALL=bare-install
+-	fi
++	INSTALL=${DJ_DB_INSTALL:-install}
+ 	echo "Using ${INSTALL}..."
+ 	bin/dj_setup_database -uroot -p${MYSQL_ROOT_PASSWORD} ${INSTALL}
+ else
+-- 
+2.20.1
+

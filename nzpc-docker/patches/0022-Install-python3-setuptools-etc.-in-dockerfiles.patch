@@ -1,0 +1,54 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Sun, 5 Sep 2021 16:40:34 +1200
+Subject: Install python3-setuptools etc. in dockerfiles
+
+Without them, "pip3 install rst2pdf" fails during the installation of
+reportlab.
+
+This is not required on Debian 11 and later, in part because
+python3-pip has an explicit dependency on python3-setuptools.
+---
+ docker/domserver/Dockerfile        | 2 ++
+ docker/domserver/Dockerfile.source | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
+index de3ec34b8..fc84b03ad 100644
+--- a/docker/domserver/Dockerfile
++++ b/docker/domserver/Dockerfile
+@@ -14,11 +14,13 @@ RUN apt-get update \
+ 	sudo bsdmainutils ntp libcgroup-dev procps \
+ 	linuxdoc-tools linuxdoc-tools-text groff \
+ 	python3-sphinx python3-sphinx-rtd-theme python3-pip fontconfig python3-yaml \
++	python3-setuptools python3-wheel python3-dev \
+ 	texlive-latex-recommended texlive-latex-extra \
+ 	texlive-fonts-recommended texlive-lang-european \
+ 	libcurl4-gnutls-dev libjsoncpp-dev libmagic-dev \
+ 	enscript lpr ca-certificates \
+ 	&& rm -rf /var/lib/apt/lists/*
++# packages python3-setuptools, python3-wheel, python3-dev are not required on Debian 11 and later
+ 
+ # Needed for building the docs
+ RUN pip3 install pygments rst2pdf
+diff --git a/docker/domserver/Dockerfile.source b/docker/domserver/Dockerfile.source
+index 4860d28fb..1083c6a34 100644
+--- a/docker/domserver/Dockerfile.source
++++ b/docker/domserver/Dockerfile.source
+@@ -31,11 +31,13 @@ RUN apt-get update \
+ 	sudo bsdmainutils ntp libcgroup-dev procps \
+ 	linuxdoc-tools linuxdoc-tools-text groff \
+ 	python3-sphinx python3-sphinx-rtd-theme python3-pip fontconfig python3-yaml \
++	python3-setuptools python3-wheel python3-dev \
+ 	texlive-latex-recommended texlive-latex-extra \
+ 	texlive-fonts-recommended texlive-lang-european \
+ 	libcurl4-gnutls-dev libjsoncpp-dev libmagic-dev \
+ 	enscript lpr ca-certificates \
+ 	&& rm -rf /var/lib/apt/lists/*
++# packages python3-setuptools, python3-wheel, python3-dev are not required on Debian 11 and later
+ 
+ # Needed for building the docs
+ RUN pip3 install pygments rst2pdf
+-- 
+2.20.1
+
