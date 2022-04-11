@@ -8,7 +8,7 @@ Subject: Implement Dockerfile.source for building domserver image from source
  1 file changed, 33 insertions(+), 8 deletions(-)
 
 diff --git a/docker/domserver/Dockerfile.source b/docker/domserver/Dockerfile.source
-index 5b5534cb1..3b0d255c5 100644
+index 5b5534cb1..19658efd3 100644
 --- a/docker/domserver/Dockerfile.source
 +++ b/docker/domserver/Dockerfile.source
 @@ -1,4 +1,21 @@
