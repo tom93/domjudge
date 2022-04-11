@@ -80,7 +80,6 @@
 		"symfony/framework-bundle": "4.4.*",
 		"symfony/http-client": "4.4.*",
 		"symfony/monolog-bundle": "^3.4.0",
-		"symfony/profiler-pack": "^1.0",
 		"symfony/security-bundle": "4.4.*",
 		"symfony/security-csrf": "4.4.*",
 		"symfony/twig-bundle": "^4.4",
@@ -95,7 +94,9 @@
 		"symfony/debug-bundle": "4.4.*",
 		"symfony/maker-bundle": "^1.13",
 		"symfony/phpunit-bridge": "^4.4",
-		"symfony/var-dumper": "4.4.*"
+		"symfony/stopwatch": "4.4.*",
+		"symfony/var-dumper": "4.4.*",
+		"symfony/web-profiler-bundle": "4.4.*"
 	},
 	"autoload": {
 		"psr-4": {
