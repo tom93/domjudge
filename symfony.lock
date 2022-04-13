@@ -382,6 +382,9 @@
     "symfony/dependency-injection": {
         "version": "v4.3.2"
     },
+    "symfony/deprecation-contracts": {
+        "version": "v2.5.1"
+    },
     "symfony/doctrine-bridge": {
         "version": "v4.3.2"
     },
@@ -525,6 +528,9 @@
         "version": "v1.11.0"
     },
     "symfony/polyfill-php80": {
+        "version": "v1.25.0"
+    },
+    "symfony/polyfill-php81": {
         "version": "v1.25.0"
     },
     "symfony/property-access": {
