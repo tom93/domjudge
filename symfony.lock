@@ -5,6 +5,9 @@
     "components/jquery": {
         "version": "3.3.1"
     },
+    "composer/package-versions-deprecated": {
+        "version": "1.11.99.1"
+    },
     "datatables/datatables": {
         "version": "1.10.19"
     },
@@ -520,6 +523,9 @@
     },
     "symfony/polyfill-php73": {
         "version": "v1.11.0"
+    },
+    "symfony/polyfill-php80": {
+        "version": "v1.25.0"
     },
     "symfony/property-access": {
         "version": "v4.3.2"
