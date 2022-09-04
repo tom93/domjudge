@@ -501,6 +501,8 @@ class Language extends BaseApiEntity
                 return 'prolog';
             case 'rb':
                 return 'ruby';
+            case 'rs':
+                return 'rust';
         }
         return $this->getLangid();
     }
