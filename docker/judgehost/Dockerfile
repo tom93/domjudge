@@ -18,7 +18,7 @@ RUN apt-get update \
 	php-cli php-zip php-gd php-curl php-mysql php-json \
 	php-gmp php-xml php-mbstring python3 \
 	gcc g++ default-jre-headless default-jdk-headless \
-	mono-mcs \
+	mono-mcs rustc \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Set up user
