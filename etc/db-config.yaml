@@ -259,6 +259,15 @@
             default_value: true
             public: true
             description: Show submission and problem statistics on the team and public pages.
+        -   name: show_teams_on_scoreboard
+            type: int
+            default_value: 0
+            public: true
+            description: Show teams on the scoreboard?
+            options:
+                0: Always
+                1: After login
+                2: After first submission
 -   category: Authentication
     description: Options related to authentication.
     items:
