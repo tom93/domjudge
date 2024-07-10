@@ -53,6 +53,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
 	FPM_MAX_CHILDREN=40 \
 	DJ_DB_INSTALL=install
 
+# Set up user
+RUN useradd -m domjudge
+
 # Install required packages for running of domserver
 RUN apt-get update \
 	&& apt-get install --no-install-recommends --no-install-suggests -y \
@@ -64,18 +67,14 @@ RUN apt-get update \
 	ca-certificates python3-yaml \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Set up user
-RUN useradd -m domjudge
-
 # Install composer
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 	&& php composer-setup.php \
 	&& mv /composer.phar /usr/local/bin/composer
 
 # Copy domserver
-RUN mkdir /opt/domjudge && chown domjudge: /opt/domjudge
-COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjudge/domserver
-COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
+COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
+COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
 
 # Copy scripts
 COPY domserver/scripts /scripts/
