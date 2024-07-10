@@ -1,7 +1,10 @@
-FROM debian:bookworm-slim
+FROM debian:bookworm
 LABEL org.opencontainers.image.authors="DOMjudge team <team@domjudge.org>"
 
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Set up user
+RUN useradd -m domjudge
 
 # Install required packages for build of judgehost
 RUN apt-get update \
@@ -15,9 +18,6 @@ RUN apt-get update \
 	libcurl4-gnutls-dev libjsoncpp-dev libmagic-dev \
 	ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
-
-# Set up user
-RUN useradd -m domjudge
 
 # Install composer
 
