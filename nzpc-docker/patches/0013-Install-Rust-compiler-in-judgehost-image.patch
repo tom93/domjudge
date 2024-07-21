@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Wed, 7 Sep 2022 00:13:19 +1200
+Subject: Install Rust compiler in judgehost image
+
+Rust was added to DOMjudge 8.2 in commit de73ea26a (Add rust language
+support (#1665), 2022-09-04).
+
+We would like to enable Rust in the NZPC (as an unofficial language).
+Backporting the changes to the database (add Rust to the language
+table and add the compile script) is too much work, so that will have
+to be done by hand through the DOMjudge web interface until we update
+to DOMjudge 8.2.
+---
+ docker/judgehost/Dockerfile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/docker/judgehost/Dockerfile b/docker/judgehost/Dockerfile
+index bf84901a8..6e86e7651 100644
+--- a/docker/judgehost/Dockerfile
++++ b/docker/judgehost/Dockerfile
+@@ -18,7 +18,7 @@ RUN apt-get update \
+ 	php-cli php-zip php-gd php-curl php-mysql php-json \
+ 	php-gmp php-xml php-mbstring python3 \
+ 	gcc g++ default-jre-headless default-jdk-headless \
+-	mono-mcs \
++	mono-mcs rustc \
+ 	&& rm -rf /var/lib/apt/lists/*
+ 
+ # Set up user
+-- 
+2.20.1
+
