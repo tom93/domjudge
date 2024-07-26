@@ -22,6 +22,8 @@ RUN apt-get update \
 	php-gmp php-xml php-mbstring python3 \
 	gcc g++ default-jre-headless default-jdk-headless ghc \
 	mono-mcs rustc \
+	# remove Haskell Cabal to reduce image size (Cabal is a packaging system, we don't need it)
+	&& rm -rf /usr/lib/ghc/Cabal-* \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Add chroot and judgehost data
