@@ -1,12 +1,11 @@
 #!/bin/sh
 
+# Rust compile wrapper-script for 'compile.sh'.
+# See that script for syntax and more info.
+
 DEST="$1" ; shift
 MEMLIMIT="$1" ; shift
 
-# first you need to ./dj_make_chroot -i rustc
-
-mkdir rust_tmp_dir
-export TMPDIR=rust_tmp_dir
+export TMPDIR="$PWD"
 rustc -C opt-level=3 -o "$DEST" "$@"
-rmdir rust_tmp_dir
-exit 0
+exit $?
