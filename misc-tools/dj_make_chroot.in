@@ -176,6 +176,8 @@ if [ "$DISTRO" = 'Debian' ]; then
     INSTALLDEBS="$INSTALLDEBS mono-mcs"
     # Haskell
     INSTALLDEBS="$INSTALLDEBS ghc"
+    # remove Haskell Cabal to reduce disk usage (Cabal is a packaging system, we don't need it)
+    CLEANUP='rm -rf /usr/lib/ghc/Cabal-*'
 
     # Packages to remove after upgrade (space separated):
     REMOVEDEBS=""
@@ -442,6 +444,7 @@ fi
 in_chroot "apt-get remove --purge $REMOVEDEBS"
 in_chroot "apt-get autoremove --purge"
 in_chroot "apt-get clean"
+if [ -n "{CLEANUP-}" ]; then in_chroot "$CLEANUP"; fi
 
 # Remove unnecessary setuid bits
 in_chroot "chmod a-s /usr/bin/wall /usr/bin/newgrp \
