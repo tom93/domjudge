@@ -172,6 +172,7 @@ if [ "$DISTRO" = 'Debian' ]; then
     INSTALLDEBS="gcc g++ make default-jdk-headless pypy3 locales"
     # For Rust support add: rustc to INSTALLDEBS, or, ./dj_make_chroot -i rustc
     # For C# support add: mono-mcs
+    INSTALLDEBS="$INSTALLDEBS mono-mcs"
 
     # Packages to remove after upgrade (space separated):
     REMOVEDEBS=""
