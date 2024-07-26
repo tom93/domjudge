@@ -11,6 +11,8 @@ MAINSOURCE="$1"
 # https://ghc.haskell.org/trac/ghc/ticket/11678
 export HOME=/does/not/exist
 
+export TMPDIR="$PWD"
+
 # Add -DONLINE_JUDGE or -DDOMJUDGE below if you want it make easier for teams
 # to do local debugging.
 
