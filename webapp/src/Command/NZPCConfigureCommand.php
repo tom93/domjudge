@@ -33,7 +33,7 @@ class NZPCConfigureCommand extends Command
 
     const CONTEST_SITE_NAMES = ['Auckland', 'Hamilton', 'Invercargill', 'Christchurch', 'Wellington', 'Dunedin'];
 
-    const LANGUAGE_IDS = ['c', 'cpp', 'java', 'py3', 'csharp'];
+    const LANGUAGE_IDS = ['c', 'cpp', 'java', 'py3', 'csharp', 'rs', 'hs'];
 
     public function __construct(
         #[Autowire('%domjudge.sqldir%')]
