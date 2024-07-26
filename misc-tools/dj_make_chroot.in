@@ -1,8 +1,8 @@
 #!/bin/sh
 # @configure_input@
 #
-# Script to generate a basic chroot environment with a Java JRE
-# to allow for Java programs to run in a chroot.
+# Script to generate a chroot environment for compiling and running
+# submissions.
 #
 # This script downloads and installs a Debian or Ubuntu base system.
 # Minimum requirements: a Linux system with glibc >= 2.3, wget, ar and
