@@ -56,15 +56,18 @@ class UserRegistrationType extends AbstractType
                     'autocomplete' => 'username',
                     'title' => 'Used to log in to this contest website. Must be alphanumeric.',
                 ],
-            ])
-            ->add('name', TextType::class, [
-                'label' => false,
-                'required' => false,
-                'attr' => [
-                    'placeholder' => 'Full name (optional)',
-                    'autocomplete' => 'name',
-                ],
             ]);
+        if ($this->config->get('show_full_name_in_reg_form')) {
+            $builder
+                ->add('name', TextType::class, [
+                    'label' => false,
+                    'required' => false,
+                    'attr' => [
+                        'placeholder' => 'Full name (optional)',
+                        'autocomplete' => 'name',
+                    ],
+                ]);
+        }
         if ($this->config->get('show_user_emails')) {
             $builder
                 ->add('email', EmailType::class, [
