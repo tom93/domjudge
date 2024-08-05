@@ -1,4 +1,4 @@
-FROM debian:stable
+FROM debian:bullseye
 MAINTAINER DOMjudge team <team@domjudge.org>
 
 ENV DEBIAN_FRONTEND=noninteractive \
