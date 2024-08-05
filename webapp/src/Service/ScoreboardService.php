@@ -876,7 +876,7 @@ class ScoreboardService
         }
 
         // show only contest sites with visible teams
-        if (empty($categories) || !$showAffiliations) {
+        if (empty($categories)) {
             $filters['sites'] = [];
         } else {
             $queryBuilder = $this->em->createQueryBuilder()
@@ -911,7 +911,7 @@ class ScoreboardService
                 ->addOrderBy('s.name', 'ASC')
                 ->addOrderBy('s.siteid', 'ASC');
 
-            /** @var ContestSites[] $sites */
+            /** @var ContestSite[] $sites */
             $sites = $queryBuilder->getQuery()->getResult();
             foreach ($sites as $site) {
                 $filters['sites'][$site->getSiteid()] = $site->getName();
