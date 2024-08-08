@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM debian:bookworm
 MAINTAINER DOMjudge team <team@domjudge.org>
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -17,7 +17,7 @@ RUN useradd -m domjudge
 RUN apt-get update \
 	&& apt-get install --no-install-recommends --no-install-suggests -y \
 	dumb-init \
-	acl zip unzip supervisor sudo procps libcgroup1 \
+	acl zip unzip supervisor sudo procps libcgroup2 \
 	php-cli php-zip php-gd php-curl php-mysql php-json \
 	php-gmp php-xml php-mbstring pypy3 \
 	gcc g++ default-jre-headless default-jdk-headless ghc \
