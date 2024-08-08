@@ -32,7 +32,7 @@ final class Version20191031203138 extends AbstractMigration implements Container
         $python3 = $em->getRepository(Language::class)->find('py3');
         $this->skipIf($python2 === null || $python3 === null, 'Python 2 or 3 language not found');
         $this->skipIf($python2->getAllowSubmit(), 'Python 2 language enabled');
-        $this->skipIf($python3->getAllowSubmit(), 'Python 3 language enabled');
+        //$this->skipIf($python3->getAllowSubmit(), 'Python 3 language enabled');
         $this->skipIf($python2->getExtensions() !== ['py2', 'py'], 'Python 2 extensions modified');
         $this->skipIf($python3->getExtensions() !== ['py3'], 'Python 3 extensions modified');
 
