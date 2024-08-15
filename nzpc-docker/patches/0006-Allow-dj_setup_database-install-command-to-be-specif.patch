@@ -14,10 +14,10 @@ DJ_DB_INSTALL that can be set to any command name.
  3 files changed, 3 insertions(+), 7 deletions(-)
 
 diff --git a/docker/README.md b/docker/README.md
-index 2f33b9476..636d448cb 100644
+index 9b46f867b..2232c3856 100644
 --- a/docker/README.md
 +++ b/docker/README.md
-@@ -80,7 +80,7 @@ The following environment variables are supported by the `domserver` container:
+@@ -131,7 +131,7 @@ The following environment variables are supported by the `domserver` container:
  * `MYSQL_PASSWORD` (defaults to `domjudge`): set the password to use for connecting to MySQL.
  * `MYSQL_ROOT_PASSWORD` (defaults to `domjudge`): set the root password to use for connecting to MySQL.
  * `MYSQL_DATABASE` (defaults to `domjudge`): set the database to use.
@@ -27,23 +27,23 @@ index 2f33b9476..636d448cb 100644
  * `TRUSTED_PROXIES` (defaults to empty): The IP list of trusted proxy servers, separated by a comma(`,`).
  * `WEBAPP_BASEURL` (defaults to `/`): The Base Url of DOMserver. Such as `/domjudge`, You can access the DOMserver homepage via `http://localhost/domjudge`.
 diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
-index 8279b3c5a..d39d3e329 100644
+index 86dfe06db..daf1553b0 100644
 --- a/docker/domserver/Dockerfile
 +++ b/docker/domserver/Dockerfile
-@@ -49,7 +49,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
+@@ -51,7 +51,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
  	MYSQL_PASSWORD=domjudge \
  	MYSQL_ROOT_PASSWORD=domjudge \
  	FPM_MAX_CHILDREN=40 \
 -	DJ_DB_INSTALL_BARE=0
 +	DJ_DB_INSTALL=install
  
- # Install required packages for running of domserver
- RUN apt-get update \
+ # Set up user
+ RUN useradd -m domjudge
 diff --git a/docker/domserver/scripts/start.d/50-domjudge.sh b/docker/domserver/scripts/start.d/50-domjudge.sh
-index 94381f9ff..9c32d414f 100755
+index 64213e729..690ac6e9e 100755
 --- a/docker/domserver/scripts/start.d/50-domjudge.sh
 +++ b/docker/domserver/scripts/start.d/50-domjudge.sh
-@@ -213,11 +213,7 @@ fi
+@@ -162,11 +162,7 @@ fi
  if ! bin/dj_setup_database -uroot -p"${MYSQL_ROOT_PASSWORD}" status > /dev/null 2>&1
  then
  	echo "  Database not installed; installing..."

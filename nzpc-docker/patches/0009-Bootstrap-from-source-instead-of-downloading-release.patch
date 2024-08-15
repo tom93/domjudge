@@ -9,32 +9,32 @@ Subject: Bootstrap from source instead of downloading release tarball in
  1 file changed, 9 insertions(+)
 
 diff --git a/docker/build.sh b/docker/build.sh
-index 14c07432e..2e9910e30 100755
+index 6cbd189b1..929eebb03 100755
 --- a/docker/build.sh
 +++ b/docker/build.sh
-@@ -15,6 +15,7 @@ fi
- 
- VERSION="$1"
+@@ -47,6 +47,7 @@ URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
+ FILE=domjudge.tar.gz
+ section_end
  
 +if false; then
- URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
- FILE=domjudge.tar.gz
- 
-@@ -27,6 +28,14 @@ then
+ section_start "Download DOMjudge tarball"
+ echo "[..] Downloading DOMjudge version ${VERSION}..."
+ if ! wget --quiet "${URL}" -O ${FILE}
+@@ -56,6 +57,14 @@ then
  fi
- 
  echo "[ok] DOMjudge version ${VERSION} downloaded as domjudge.tar.gz"; echo
+ section_end
 +fi
 +
 +echo "[..] Boostrapping..."
 +tar c -C .. --exclude=./.git --exclude="./docker/*.tar.gz" . |
-+	docker build --target=dist -t domjudge/dist:${VERSION} -f docker/domserver/Dockerfile.source -
-+docker run --rm domjudge/dist:${VERSION} tar cz -C /domjudge-src domjudge > domjudge.tar.gz
-+docker rmi --no-prune domjudge/dist:${VERSION}
++	docker build --target=dist -t "${NAMESPACE}/dist:${VERSION}" -f docker/domserver/Dockerfile.source -
++docker run --rm "${NAMESPACE}/dist:${VERSION}" tar cz -C /domjudge-src domjudge > domjudge.tar.gz
++docker rmi --no-prune "${NAMESPACE}/dist:${VERSION}"
 +echo "[ok] Done boostrapping"
  
+ section_start "Build domserver container"
  echo "[..] Building Docker image for domserver..."
- ./build-domjudge.sh "domjudge/domserver:${VERSION}"
 -- 
 2.20.1
 

@@ -15,57 +15,63 @@ Hub aren't relevant).
  1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/docker/build.sh b/docker/build.sh
-index 2e9910e30..75ee029d4 100755
+index 929eebb03..94cf270ac 100755
 --- a/docker/build.sh
 +++ b/docker/build.sh
-@@ -15,7 +15,7 @@ fi
- 
- VERSION="$1"
+@@ -47,7 +47,7 @@ URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
+ FILE=domjudge.tar.gz
+ section_end
  
 -if false; then
 +if [ "${BUILD_DOWNLOAD_RELEASE-0}" != 0 ]; then
- URL=https://www.domjudge.org/releases/domjudge-${VERSION}.tar.gz
- FILE=domjudge.tar.gz
- 
-@@ -30,25 +30,34 @@ fi
- echo "[ok] DOMjudge version ${VERSION} downloaded as domjudge.tar.gz"; echo
+ section_start "Download DOMjudge tarball"
+ echo "[..] Downloading DOMjudge version ${VERSION}..."
+ if ! wget --quiet "${URL}" -O ${FILE}
+@@ -59,31 +59,40 @@ echo "[ok] DOMjudge version ${VERSION} downloaded as domjudge.tar.gz"; echo
+ section_end
  fi
  
 +if [ "${BUILD_FROM_SOURCE-1}" != 0 ]; then
  echo "[..] Boostrapping..."
  tar c -C .. --exclude=./.git --exclude="./docker/*.tar.gz" . |
- 	docker build --target=dist -t domjudge/dist:${VERSION} -f docker/domserver/Dockerfile.source -
- docker run --rm domjudge/dist:${VERSION} tar cz -C /domjudge-src domjudge > domjudge.tar.gz
- docker rmi --no-prune domjudge/dist:${VERSION}
+ 	docker build --target=dist -t "${NAMESPACE}/dist:${VERSION}" -f docker/domserver/Dockerfile.source -
+ docker run --rm "${NAMESPACE}/dist:${VERSION}" tar cz -C /domjudge-src domjudge > domjudge.tar.gz
+ docker rmi --no-prune "${NAMESPACE}/dist:${VERSION}"
  echo "[ok] Done boostrapping"
 +fi
  
 +if [ "${BUILD_DOMSERVER-1}" != 0 ]; then
+ section_start "Build domserver container"
  echo "[..] Building Docker image for domserver..."
- ./build-domjudge.sh "domjudge/domserver:${VERSION}"
+ ./build-domjudge.sh "${NAMESPACE}/domserver:${VERSION}"
  echo "[ok] Done building Docker image for domserver"
+ section_end
 +fi
  
 +if [ "${BUILD_JUDGEHOST-1}" != 0 ]; then
+ section_start "Build judgehost container (with intermediate image)"
  echo "[..] Building Docker image for judgehost using intermediate build image..."
- ./build-judgehost.sh "domjudge/judgehost:${VERSION}"
+ ./build-judgehost.sh "${NAMESPACE}/judgehost:${VERSION}"
  echo "[ok] Done building Docker image for judgehost"
+ section_end
 +fi
  
 +if [ "${BUILD_DEFAULT_JUDGEHOST_CHROOT-0}" != 0 ]; then
+ section_start "Build judgehost container (judging chroot)"
  echo "[..] Building Docker image for judgehost chroot..."
- docker build -t "domjudge/default-judgehost-chroot:${VERSION}" -f judgehost/Dockerfile.chroot .
+ docker build -t "${NAMESPACE}/default-judgehost-chroot:${VERSION}" -f judgehost/Dockerfile.chroot .
  echo "[ok] Done building Docker image for judgehost chroot"
+ section_end
 +fi
  
 +if [ "${BUILD_PRINT_HELP-0}" != 0 ]; then
- echo "All done. Image domjudge/domserver:${VERSION} and domjudge/judgehost:${VERSION} created"
+ section_start "Push instructions"
+ echo "All done. Image ${NAMESPACE}/domserver:${VERSION} and ${NAMESPACE}/judgehost:${VERSION} created"
  echo "If you are a DOMjudge maintainer with access to the domjudge organization on Docker Hub, you can now run the following command to push them to Docker Hub:"
- echo "$ docker push domjudge/domserver:${VERSION} && docker push domjudge/judgehost:${VERSION} && docker push domjudge/default-judgehost-chroot:${VERSION}"
-@@ -57,3 +66,4 @@ echo "$ docker tag domjudge/domserver:${VERSION} domjudge/domserver:latest && \
- docker tag domjudge/judgehost:${VERSION} domjudge/judgehost:latest && \
- docker tag domjudge/default-judgehost-chroot:${VERSION} domjudge/default-judgehost-chroot:latest && \
- docker push domjudge/domserver:latest && docker push domjudge/judgehost:latest && docker push domjudge/default-judgehost-chroot:latest"
+@@ -94,3 +103,4 @@ docker tag ${NAMESPACE}/judgehost:${VERSION} ${NAMESPACE}/judgehost:latest && \
+ docker tag ${NAMESPACE}/default-judgehost-chroot:${VERSION} ${NAMESPACE}/default-judgehost-chroot:latest && \
+ docker push ${NAMESPACE}/domserver:latest && docker push ${NAMESPACE}/judgehost:latest && docker push ${NAMESPACE}/default-judgehost-chroot:latest"
+ section_end
 +fi
 -- 
 2.20.1

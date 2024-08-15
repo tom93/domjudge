@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 26 Jul 2024 18:22:26 +0000
+Subject: cherry-pick: Don't install compilers in the Docker scripts (requires
+ DOMjudge >= 8.0.0)
+
+As of DOMjudge 8.0.0, compilation of submissions happens inside the
+chroot.
+
+So there is no reason to install any compilers outside the chroot.
+
+There is also no need to install anything inside the chroot, because
+that's the responsibility of the script dj_make_chroot from the
+DOMjudge/domjudge repository.
+---
+ docker/judgehost/Dockerfile        | 3 +--
+ docker/judgehost/Dockerfile.chroot | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/docker/judgehost/Dockerfile b/docker/judgehost/Dockerfile
+index bda39f01e..d7f04ae98 100644
+--- a/docker/judgehost/Dockerfile
++++ b/docker/judgehost/Dockerfile
+@@ -19,8 +19,7 @@ RUN apt-get update \
+ 	dumb-init pkg-config \
+ 	acl lsof zip unzip supervisor sudo procps libcgroup2 \
+ 	php-cli php-zip php-gd php-curl php-mysql php-json \
+-	php-gmp php-xml php-mbstring python3 \
+-	gcc g++ default-jre-headless default-jdk-headless ghc fp-compiler \
++	php-gmp php-xml php-mbstring \
+ 	&& rm -rf /var/lib/apt/lists/*
+ 
+ # Add chroot and judgehost data
+diff --git a/docker/judgehost/Dockerfile.chroot b/docker/judgehost/Dockerfile.chroot
+index 89e9ade8d..cf0059fb1 100644
+--- a/docker/judgehost/Dockerfile.chroot
++++ b/docker/judgehost/Dockerfile.chroot
+@@ -1,7 +1,7 @@
+ FROM ubuntu:20.04
+ ENV DEBIAN_FRONTEND=noninteractive
+ RUN apt-get update && apt-get -y install \
+-  ca-certificates default-jre-headless pypy3 locales \
++  ca-certificates locales \
+   && rm -rf /var/lib/apt/lists/*
+ 
+ RUN chmod a-s \
+-- 
+2.20.1
+

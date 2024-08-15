@@ -1,0 +1,103 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Mon, 27 Jul 2020 20:01:51 +0000
+Subject: cherry-pick: Speed up recursive chown of /domjudge-src in Docker
+
+Recursive chown is slow in Docker because of the copy-on-write
+filesystem.[1] We should instead try to create files with correct
+ownership from the beginning.
+
+Docker's ADD directive doesn't support overriding the owner of the
+extracted files[2], so we copy domjudge.tar.gz (the release archive)
+as-is and then extract it manually with correct ownership. (The
+archive will be stored in the intermediate layer, but this is actually
+much faster and produces a smaller image than `chown -R`.)
+
+We don't bother to do the same for judgehost.tar.gz (which contains
+/opt/domjudge/judgehost; it's created via build-judgehost.sh >
+judgehost/Dockerfile.build > chroot-and-tar.sh), because that
+directory is small.
+
+[1] https://www.github.com/docker/for-linux/issues/388
+[2] https://www.github.com/moby/moby/issues/35525
+---
+ docker/domserver/Dockerfile       | 8 +++++---
+ docker/domserver/build.sh         | 1 -
+ docker/judgehost/Dockerfile.build | 9 +++++----
+ docker/judgehost/build.sh         | 1 -
+ 4 files changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/docker/domserver/Dockerfile b/docker/domserver/Dockerfile
+index 1ca276495..86dfe06db 100644
+--- a/docker/domserver/Dockerfile
++++ b/docker/domserver/Dockerfile
+@@ -30,11 +30,13 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+ 	&& php composer-setup.php \
+ 	&& mv /composer.phar /usr/local/bin/composer
+ 
+-# Add DOMjudge source code and build script
+-ADD domjudge.tar.gz /domjudge-src
+-COPY domserver/build.sh /domjudge-src/build.sh
++# Add DOMjudge source code with correct ownership
++RUN mkdir /domjudge-src && chown domjudge: /domjudge-src
++COPY domjudge.tar.gz /domjudge-src/domjudge.tar.gz
++RUN cd /domjudge-src && su domjudge -c 'tar xzf domjudge.tar.gz' && rm domjudge.tar.gz
+ 
+ # Build and install domserver
++COPY domserver/build.sh /domjudge-src/build.sh
+ RUN /domjudge-src/build.sh
+ 
+ # Now create an image with the actual build in it
+diff --git a/docker/domserver/build.sh b/docker/domserver/build.sh
+index 14be2d3c2..3f38d8080 100755
+--- a/docker/domserver/build.sh
++++ b/docker/domserver/build.sh
+@@ -1,7 +1,6 @@
+ #!/bin/sh -eu
+ 
+ cd /domjudge-src/domjudge*
+-chown -R domjudge: .
+ # If we used a local source tarball, it might not have been built yet
+ sudo -u domjudge sh -c '. /venv/bin/activate && make dist'
+ sudo -u domjudge ./configure -with-baseurl=http://localhost/
+diff --git a/docker/judgehost/Dockerfile.build b/docker/judgehost/Dockerfile.build
+index 716dda597..fdf35d852 100644
+--- a/docker/judgehost/Dockerfile.build
++++ b/docker/judgehost/Dockerfile.build
+@@ -20,16 +20,17 @@ RUN apt-get update \
+ RUN useradd -m domjudge
+ 
+ # Install composer
+-
+ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+ 	&& php composer-setup.php \
+ 	&& mv /composer.phar /usr/local/bin/composer
+ 
+-# Add DOMjudge source code and build script
+-ADD domjudge.tar.gz /domjudge-src
+-ADD judgehost/build.sh /domjudge-src
++# Add DOMjudge source code with correct ownership
++RUN mkdir /domjudge-src && chown domjudge: /domjudge-src
++COPY domjudge.tar.gz /domjudge-src/domjudge.tar.gz
++RUN cd /domjudge-src && su domjudge -c 'tar xzf domjudge.tar.gz' && rm domjudge.tar.gz
+ 
+ # Build and install judgehost
++COPY judgehost/build.sh /domjudge-src/build.sh
+ RUN /domjudge-src/build.sh
+ 
+ # We need to mount proc, which is not possible in "docker build". Thus we need to run this when starting the container
+diff --git a/docker/judgehost/build.sh b/docker/judgehost/build.sh
+index ad81dbac8..3a8782940 100755
+--- a/docker/judgehost/build.sh
++++ b/docker/judgehost/build.sh
+@@ -1,7 +1,6 @@
+ #!/bin/sh -eu
+ 
+ cd /domjudge-src/domjudge*
+-chown -R domjudge: .
+ # If we used a local source tarball, it might not have been built yet
+ sudo -u domjudge make configure
+ sudo -u domjudge ./configure -with-baseurl=http://localhost/
+-- 
+2.20.1
+

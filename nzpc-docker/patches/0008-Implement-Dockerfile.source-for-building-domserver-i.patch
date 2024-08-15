@@ -4,19 +4,19 @@ Date: Tue, 21 Jul 2020 05:28:38 +1200
 Subject: Implement Dockerfile.source for building domserver image from source
 
 ---
- docker/domserver/Dockerfile.source | 41 ++++++++++++++++++++++++------
- 1 file changed, 33 insertions(+), 8 deletions(-)
+ docker/domserver/Dockerfile.source | 44 ++++++++++++++++++++++++------
+ 1 file changed, 35 insertions(+), 9 deletions(-)
 
 diff --git a/docker/domserver/Dockerfile.source b/docker/domserver/Dockerfile.source
-index 5b5534cb1..19658efd3 100644
+index daf1553b0..be4532d6b 100644
 --- a/docker/domserver/Dockerfile.source
 +++ b/docker/domserver/Dockerfile.source
 @@ -1,4 +1,21 @@
--FROM debian:stable-slim AS domserver-build
+-FROM debian:bookworm-slim AS domserver-build
 +# This Dockerfile builds the domserver image from source.
 +#
-+# It is based on domserver/Dockerfile, but bootstraps from source instead of
-+# using a release tarball.
++# It is based on domserver/Dockerfile, but builds from a directory with the
++# source code instead of a release tarball.
 +#
 +# The build context should be the root directory of the project, unlike the
 +# other Dockerfiles which expect the build context to be the "docker"
@@ -30,29 +30,31 @@ index 5b5534cb1..19658efd3 100644
 +# docker run --rm domjudge/dist:<VERSION> tar cz -C /domjudge-src domjudge > docker/domjudge.tar.gz
 +# docker rmi domjudge/dist:<VERSION>
 +
-+FROM debian:stable-slim AS dist
- MAINTAINER DOMjudge team <team@domjudge.org>
++FROM debian:bookworm-slim AS domserver-build-part-1
+ LABEL org.opencontainers.image.authors="DOMjudge team <team@domjudge.org>"
  
  ENV DEBIAN_FRONTEND=noninteractive
-@@ -30,13 +47,21 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+@@ -30,13 +47,22 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
  	&& php composer-setup.php \
  	&& mv /composer.phar /usr/local/bin/composer
  
+-# Add DOMjudge source code with correct ownership
+-RUN mkdir /domjudge-src && chown domjudge: /domjudge-src
+-COPY domjudge.tar.gz /domjudge-src/domjudge.tar.gz
+-RUN cd /domjudge-src && su domjudge -c 'tar xzf domjudge.tar.gz' && rm domjudge.tar.gz
 +# Install PHP dependencies
-+# (also done by "make ... dist" below, but we do it here *before* adding the rest of the source to leverage the build cache)
++# (also done by "make dist", but we do it here *before* adding the rest of the source to leverage the build cache)
 +COPY --chown=domjudge composer.json composer.lock symfony.lock /domjudge-src/domjudge/
-+RUN cd /domjudge-src/domjudge && sudo -u domjudge composer install --prefer-dist -o --no-scripts
++RUN cd /domjudge-src/domjudge && su domjudge -c 'composer install --prefer-dist -o --no-scripts'
 +
- # Add DOMjudge source code
--ADD domjudge.tar.gz /domjudge-src
--RUN find /domjudge-src/domjudge* '(' ! -user domjudge -o ! -group domjudge ')' -execdir \
--	chown domjudge:domjudge {} +
++# Add DOMjudge source code
 +COPY --chown=domjudge . /domjudge-src/domjudge
 +
-+# Bootstrap the configure/build system
-+RUN sudo -u domjudge make -C /domjudge-src/domjudge dist
-+
-+FROM dist AS domserver-build
++# If we are creating a release tarball (`docker build --target=dist`), run `make dist` and finish.
++FROM domserver-build-part-1 AS dist
++RUN cd /domjudge-src/domjudge && su domjudge -c '. /venv/bin/activate && make dist'
++# Otherwise, continue normally (docker/domserver/build.sh will run `make dist`).
++FROM domserver-build-part-1 AS domserver-build
  
  # Build and install domserver
 -COPY domserver/build.sh /domjudge-src/build.sh
@@ -60,8 +62,8 @@ index 5b5534cb1..19658efd3 100644
  RUN /domjudge-src/build.sh
  
  # Now create an image with the actual build in it
-@@ -78,14 +103,14 @@ COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjud
- COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
+@@ -77,14 +103,14 @@ COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
+ COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
  
  # Copy scripts
 -COPY domserver/scripts /scripts/

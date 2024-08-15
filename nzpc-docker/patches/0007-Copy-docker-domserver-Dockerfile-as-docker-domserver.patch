@@ -5,39 +5,39 @@ Subject: Copy docker/domserver/Dockerfile as
  docker/domserver/Dockerfile.source
 
 ---
- docker/domserver/Dockerfile.source | 94 ++++++++++++++++++++++++++++++
- 1 file changed, 94 insertions(+)
+ docker/domserver/Dockerfile.source | 96 ++++++++++++++++++++++++++++++
+ 1 file changed, 96 insertions(+)
  create mode 100644 docker/domserver/Dockerfile.source
 
 diff --git a/docker/domserver/Dockerfile.source b/docker/domserver/Dockerfile.source
 new file mode 100644
-index 000000000..5b5534cb1
+index 000000000..daf1553b0
 --- /dev/null
 +++ b/docker/domserver/Dockerfile.source
-@@ -0,0 +1,94 @@
-+FROM debian:stable-slim AS domserver-build
-+MAINTAINER DOMjudge team <team@domjudge.org>
+@@ -0,0 +1,96 @@
++FROM debian:bookworm-slim AS domserver-build
++LABEL org.opencontainers.image.authors="DOMjudge team <team@domjudge.org>"
 +
 +ENV DEBIAN_FRONTEND=noninteractive
 +
 +# Install required packages for build of domserver
 +RUN apt-get update \
 +	&& apt-get install --no-install-recommends --no-install-suggests -y \
-+	autoconf automake git \
++	autoconf automake git pkg-config \
 +	gcc g++ make acl zip unzip \
 +	php-cli php-zip \
 +	php-gd php-curl php-mysql php-json php-intl \
 +	php-gmp php-xml php-mbstring \
 +	sudo bsdmainutils ntp libcgroup-dev procps \
-+	python3-sphinx python3-sphinx-rtd-theme python3-pip fontconfig python3-yaml \
++	python3-venv fontconfig \
 +	texlive-latex-recommended texlive-latex-extra \
-+	texlive-fonts-recommended texlive-lang-european latexmk \
++	texlive-fonts-recommended texlive-lang-european latexmk tex-gyre \
 +	libcurl4-gnutls-dev libjsoncpp-dev libmagic-dev \
 +	enscript lpr ca-certificates \
 +	&& rm -rf /var/lib/apt/lists/*
 +
-+# Needed for building the docs
-+RUN pip3 install pygments rst2pdf
++# Use venv to install latest Sphinx. 6.1.0 or higher is required to build DOMjudge docs.
++RUN python3 -m venv /venv && . /venv/bin/activate && pip3 install sphinx sphinx-rtd-theme rst2pdf
 +
 +# Set up user
 +RUN useradd -m domjudge
@@ -47,18 +47,18 @@ index 000000000..5b5534cb1
 +	&& php composer-setup.php \
 +	&& mv /composer.phar /usr/local/bin/composer
 +
-+# Add DOMjudge source code
-+ADD domjudge.tar.gz /domjudge-src
-+RUN find /domjudge-src/domjudge* '(' ! -user domjudge -o ! -group domjudge ')' -execdir \
-+	chown domjudge:domjudge {} +
++# Add DOMjudge source code with correct ownership
++RUN mkdir /domjudge-src && chown domjudge: /domjudge-src
++COPY domjudge.tar.gz /domjudge-src/domjudge.tar.gz
++RUN cd /domjudge-src && su domjudge -c 'tar xzf domjudge.tar.gz' && rm domjudge.tar.gz
 +
 +# Build and install domserver
 +COPY domserver/build.sh /domjudge-src/build.sh
 +RUN /domjudge-src/build.sh
 +
 +# Now create an image with the actual build in it
-+FROM debian:stable-slim
-+MAINTAINER DOMjudge team <team@domjudge.org>
++FROM debian:bookworm-slim
++LABEL org.opencontainers.image.authors="DOMjudge team <team@domjudge.org>"
 +
 +ENV DEBIAN_FRONTEND=noninteractive \
 +	CONTAINER_TIMEZONE=Europe/Amsterdam \
@@ -70,19 +70,19 @@ index 000000000..5b5534cb1
 +	FPM_MAX_CHILDREN=40 \
 +	DJ_DB_INSTALL=install
 +
++# Set up user
++RUN useradd -m domjudge
++
 +# Install required packages for running of domserver
 +RUN apt-get update \
 +	&& apt-get install --no-install-recommends --no-install-suggests -y \
-+	acl zip unzip supervisor mariadb-client apache2-utils \
++	acl curl zip unzip supervisor mariadb-client apache2-utils \
 +	nginx php-cli php-fpm php-zip \
 +	php-gd php-curl php-mysql php-json php-intl \
 +	php-gmp php-xml php-mbstring php-ldap \
 +	enscript lpr \
-+	ca-certificates python3-yaml \
++	ca-certificates python3-yaml python3-requests \
 +	&& rm -rf /var/lib/apt/lists/*
-+
-+# Set up user
-+RUN useradd -m domjudge
 +
 +# Install composer
 +RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
@@ -90,9 +90,8 @@ index 000000000..5b5534cb1
 +	&& mv /composer.phar /usr/local/bin/composer
 +
 +# Copy domserver
-+RUN mkdir /opt/domjudge && chown domjudge: /opt/domjudge
-+COPY --from=domserver-build --chown=domjudge /opt/domjudge/domserver /opt/domjudge/domserver
-+COPY --from=domserver-build --chown=domjudge /opt/domjudge/doc /opt/domjudge/doc
++COPY --from=domserver-build /opt/domjudge/domserver /opt/domjudge/domserver
++COPY --from=domserver-build /opt/domjudge/doc /opt/domjudge/doc
 +
 +# Copy scripts
 +COPY domserver/scripts /scripts/
@@ -107,6 +106,9 @@ index 000000000..5b5534cb1
 +
 +# Expose HTTP port
 +EXPOSE 80
++
++# Healthchecking script
++HEALTHCHECK --interval=10s --timeout=10s --start-period=30s --retries=3 CMD [ "/scripts/bin/healthcheck" ]
 +
 +CMD ["/scripts/start.sh"]
 -- 

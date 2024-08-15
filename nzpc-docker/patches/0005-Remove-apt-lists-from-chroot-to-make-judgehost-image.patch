@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tom Levy <tomlevy93@gmail.com>
+Date: Fri, 26 Jul 2024 23:53:10 +1200
+Subject: Remove apt lists from chroot to make judgehost image smaller
+
+---
+ docker/judgehost/chroot-and-tar.sh | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/docker/judgehost/chroot-and-tar.sh b/docker/judgehost/chroot-and-tar.sh
+index 56da9a90c..edd2fa77c 100755
+--- a/docker/judgehost/chroot-and-tar.sh
++++ b/docker/judgehost/chroot-and-tar.sh
+@@ -4,6 +4,7 @@ set -euo pipefail
+ 
+ # Usage: https://github.com/DOMjudge/domjudge/blob/main/misc-tools/dj_make_chroot.in#L58-L87
+ /opt/domjudge/judgehost/bin/dj_make_chroot
++rm -rf /var/lib/apt/lists/*
+ 
+ cd /
+ echo "[..] Compressing chroot"
+-- 
+2.20.1
+
