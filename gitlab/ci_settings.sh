@@ -13,6 +13,8 @@ export GITSHA
 export PS4='(${BASH_SOURCE}:${LINENO}): - [$?] $ '
 export LOGFILE="/opt/domjudge/domserver/webapp/var/log/prod.log"
 
+CCS_SPECS_PINNED_SHA1='a68aff54c4e60fc2bff2fc5c36c119bffa4d30f1'
+
 # Shared storage for all artifacts
 export GITLABARTIFACTS="$DIR/gitlabartifacts"
 mkdir -p "$GITLABARTIFACTS"
