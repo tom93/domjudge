@@ -23,6 +23,7 @@ docs: config
 # KLUDGE: call make instead of a dependency so that the html target
 # will run after config from inside the doc target.
 docs:
+	echo "XXX: doc/manual/Makefile: docs"
 	$(MAKE) html team
 
 distdocs:
@@ -55,9 +56,14 @@ distclean-l:
 	-rm -f $(SUBST_CONFIGS) html team
 
 conf_ref.rst: gen_conf_ref.py
+	echo "XXX doc/manual/Makefile: conf_ref.rst: gen_conf_ref.py"
+	dpkg -l | grep -i yaml || echo not installed
+	command -v python3
+	python3 -c 'import yaml' || true
 	./gen_conf_ref.py
 
 html: conf_ref.rst
+	echo "XXX doc/manual/Makefile: html"
 	sphinx-build -M $@ . build $(subst 1,-Q,$(QUIET))
 
 team:

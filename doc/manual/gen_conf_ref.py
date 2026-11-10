@@ -3,7 +3,7 @@ import json
 import sys
 import textwrap
 import yaml
-
+raise Exception("XXX managed to import yaml")
 
 def _get_category_description(category):
     return '''

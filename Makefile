@@ -83,6 +83,8 @@ install-domserver: SUBDIRS=etc     lib sql       misc-tools webapp example_probl
 judgehost:         SUBDIRS=etc             judge misc-tools
 install-judgehost: SUBDIRS=etc     lib     judge misc-tools
 docs:              SUBDIRS=    doc
+docs:
+	echo "XXX Makefile: docs"
 install-docs:      SUBDIRS=    doc
 inplace-install:   SUBDIRS=    doc               misc-tools
 inplace-uninstall: SUBDIRS=    doc               misc-tools
