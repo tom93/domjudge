@@ -34,6 +34,7 @@ FROM debian:bookworm-slim
 LABEL org.opencontainers.image.authors="DOMjudge team <team@domjudge.org>"
 
 ENV DEBIAN_FRONTEND=noninteractive \
+	AUTO_UPDATE=0 \
 	CONTAINER_TIMEZONE=Europe/Amsterdam \
 	MYSQL_HOST=mariadb \
 	MYSQL_USER=domjudge \

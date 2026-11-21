@@ -129,6 +129,7 @@ With DNS configured, you can now access the web interface on [http://domjudge.ex
 
 The following environment variables are supported by the `domserver` container:
 
+* `AUTO_UPDATE` (defaults to `0`): set to `1` to automatically install OS updates using `unattended-upgrades`.
 * `CONTAINER_TIMEZONE` (defaults to `Europe/Amsterdam`): allows you to change the timezone used inside the container.
 * `MYSQL_HOST` (defaults to `mariadb`): set the host to connect to for MySQL. Can be hostname or IP.
 * `MYSQL_USER` (defaults to `domjudge`): set the user to use for connecting to MySQL.
@@ -202,6 +203,7 @@ If the judgedaemon stops for whatever reason, you should be able to see the erro
 
 The following environment variables are supported by the `judgehost` container:
 
+* `AUTO_UPDATE` (defaults to `0`): set to `1` to automatically install OS updates using `unattended-upgrades`.
 * `CONTAINER_TIMEZONE` (defaults to `Europe/Amsterdam`): allows you to change the timezone used inside the container.
 * `DOMSERVER_BASEURL` (defaults to `http://domserver/`): base URL where the domserver can be found. The judgehost uses this to connect to the API. **Do not add `api` yourself, as the container will do this!**
 * `JUDGEDAEMON_USERNAME` (defaults to `judgehost`): username used to connect to the API.

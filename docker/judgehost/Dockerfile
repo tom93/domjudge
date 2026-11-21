@@ -39,6 +39,17 @@ RUN current_uid="$(id -u domjudge)" \
 # Add scripts
 COPY judgehost/scripts /scripts/
 
+# Add auto-update script (from domserver image)
+COPY domserver/scripts/start.d/05-auto-update.sh /scripts/auto-update.sh
+# Edit /scripts/start.sh to run /scripts/auto-update.sh and launch cron
+RUN <<EOF
+sed -i '1a\
+mkdir -p /etc/supervisor/conf.d\
+/scripts/auto-update.sh
+$i\
+cron' /scripts/start.sh
+EOF
+
 # Make the scripts available to the root user
 ENV PATH="$PATH:/opt/domjudge/judgehost/bin"
 
